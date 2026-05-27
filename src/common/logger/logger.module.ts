@@ -19,7 +19,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
                 }
               : undefined,
             autoLogging: true,
-            redact: ['req.headers.authorization', 'req.headers.cookie'],
+            redact: [
+              'req.headers.authorization',
+              'req.headers.cookie',
+              'req.body.password',
+              'req.body.confirmPassword',
+            ],
           },
         };
       },

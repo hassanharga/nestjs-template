@@ -20,6 +20,9 @@ export class HttpMetricsInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const req = context.switchToHttp().getRequest<Request>();
+    if (req.path === '/metrics') {
+      return next.handle();
+    }
     const endTimer = this.histogram.startTimer({
       method: req.method,
       path: req.path,

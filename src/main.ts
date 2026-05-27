@@ -55,14 +55,19 @@ async function bootstrap() {
     if (isShuttingDown) return;
     isShuttingDown = true;
     setTimeout(() => process.exit(1), shutdownTimeout).unref();
+    void app.close().then(() => process.exit(0));
   };
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);
 
-  await app.listen(port);
+  await app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`${appName} is running on port ${port} in ${nodeEnv} mode`);
+  });
 }
 
 bootstrap().catch((err) => {
+  // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });

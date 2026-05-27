@@ -42,4 +42,29 @@ describe('HttpMetricsInterceptor', () => {
       },
     });
   });
+
+  it('skips metrics recording for /metrics path', (done) => {
+    const counter = { inc: jest.fn() };
+    const histogram = { startTimer: jest.fn() };
+    const interceptor = new HttpMetricsInterceptor(
+      counter as any,
+      histogram as any,
+    );
+
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => ({ method: 'GET', path: '/metrics' }),
+        getResponse: () => ({ statusCode: 200 }),
+      }),
+    } as any;
+    const handler = { handle: () => of('result') };
+
+    interceptor.intercept(context, handler).subscribe({
+      complete: () => {
+        expect(histogram.startTimer).not.toHaveBeenCalled();
+        expect(counter.inc).not.toHaveBeenCalled();
+        done();
+      },
+    });
+  });
 });

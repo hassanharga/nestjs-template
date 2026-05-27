@@ -5,60 +5,31 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import { defineConfig } from 'eslint/config';
 
-export default defineConfig({
-  plugins: {
-    '@typescript-eslint': tseslint.plugin,
-  },
-  languageOptions: {
-    parser: tseslint.parser,
-    parserOptions: {
-      projectService: true,
-      tsconfigRootDir: import.meta.dirname,
-    },
-    globals: {
-      ...globals.node,
-      ...globals.jest,
-    },
-    ecmaVersion: 5,
-    sourceType: 'module',
-  },
-  ignores: ['eslint.config.mjs'],
-  ...eslint.configs.recommended,
+export default defineConfig([
+  { ignores: ['eslint.config.mjs'] },
+  eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
-  ...eslintPluginPrettierRecommended,
-  rules: {
-    '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-floating-promises': 'warn',
-    '@typescript-eslint/no-unsafe-argument': 'warn',
+  eslintPluginPrettierRecommended,
+  {
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+      },
+      ecmaVersion: 5,
+      sourceType: 'module',
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
   },
-});
-
-// export default tseslint.config(
-//   {
-//     ignores: ['eslint.config.mjs'],
-//   },
-//   eslint.configs.recommended,
-//   ...tseslint.configs.recommendedTypeChecked,
-//   eslintPluginPrettierRecommended,
-//   {
-//     languageOptions: {
-//       globals: {
-//         ...globals.node,
-//         ...globals.jest,
-//       },
-//       ecmaVersion: 5,
-//       sourceType: 'module',
-//       parserOptions: {
-//         projectService: true,
-//         tsconfigRootDir: import.meta.dirname,
-//       },
-//     },
-//   },
-//   {
-//     rules: {
-//       '@typescript-eslint/no-explicit-any': 'off',
-//       '@typescript-eslint/no-floating-promises': 'warn',
-//       '@typescript-eslint/no-unsafe-argument': 'warn'
-//     },
-//   },
-// );
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      'no-console': 'warn',
+    },
+  },
+]);

@@ -29,7 +29,7 @@ import { HttpMetricsInterceptor } from './http-metrics.interceptor';
     HttpMetricsInterceptor,
     {
       provide: APP_INTERCEPTOR,
-      useClass: HttpMetricsInterceptor,
+      useExisting: HttpMetricsInterceptor,
     },
   ],
 })
