@@ -13,7 +13,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           pinoHttp: {
             level: config.get<string>('LOG_LEVEL', 'info'),
             transport: isDev
-              ? { target: 'pino-pretty', options: { colorize: true, singleLine: true } }
+              ? {
+                  target: 'pino-pretty',
+                  options: { colorize: true, singleLine: true },
+                }
               : undefined,
             autoLogging: true,
             redact: ['req.headers.authorization', 'req.headers.cookie'],

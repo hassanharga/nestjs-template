@@ -1,5 +1,9 @@
 import { HttpExceptionFilter } from './http-exception.filter';
-import { NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 
 function buildHost(url: string) {
   const json = jest.fn();

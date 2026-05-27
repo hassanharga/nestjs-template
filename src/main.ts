@@ -23,7 +23,8 @@ async function bootstrap() {
   app.use(helmet());
 
   app.enableCors({
-    origin: corsOrigins === '*' ? '*' : corsOrigins.split(',').map((o) => o.trim()),
+    origin:
+      corsOrigins === '*' ? '*' : corsOrigins.split(',').map((o) => o.trim()),
     credentials: true,
   });
 
@@ -61,4 +62,7 @@ async function bootstrap() {
   await app.listen(port);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

@@ -6,7 +6,11 @@ import { configSchema } from './config.schema';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', `.env.${process.env.NODE_ENV ?? 'development'}`, '.env.local'],
+      envFilePath: [
+        '.env',
+        `.env.${process.env.NODE_ENV ?? 'development'}`,
+        '.env.local',
+      ],
       validate: (config) => configSchema.parse(config),
     }),
   ],

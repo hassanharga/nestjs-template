@@ -28,7 +28,10 @@ describe('configSchema', () => {
   });
 
   it('coerces THROTTLE_TTL and THROTTLE_LIMIT from strings', () => {
-    const result = configSchema.parse({ THROTTLE_TTL: '30', THROTTLE_LIMIT: '50' });
+    const result = configSchema.parse({
+      THROTTLE_TTL: '30',
+      THROTTLE_LIMIT: '50',
+    });
     expect(result.THROTTLE_TTL).toBe(30);
     expect(result.THROTTLE_LIMIT).toBe(50);
   });

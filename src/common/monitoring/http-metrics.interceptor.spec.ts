@@ -7,7 +7,10 @@ describe('HttpMetricsInterceptor', () => {
     const counter = { inc: jest.fn() };
     const histogram = { startTimer: jest.fn().mockReturnValue(endTimer) };
 
-    const interceptor = new HttpMetricsInterceptor(counter as any, histogram as any);
+    const interceptor = new HttpMetricsInterceptor(
+      counter as any,
+      histogram as any,
+    );
 
     const req = { method: 'GET', path: '/test' };
     const res = { statusCode: 200 };
@@ -21,7 +24,10 @@ describe('HttpMetricsInterceptor', () => {
 
     interceptor.intercept(context, handler).subscribe({
       complete: () => {
-        expect(histogram.startTimer).toHaveBeenCalledWith({ method: 'GET', path: '/test' });
+        expect(histogram.startTimer).toHaveBeenCalledWith({
+          method: 'GET',
+          path: '/test',
+        });
         expect(counter.inc).toHaveBeenCalledWith({
           method: 'GET',
           path: '/test',

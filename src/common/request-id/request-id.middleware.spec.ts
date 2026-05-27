@@ -26,7 +26,9 @@ describe('RequestIdMiddleware', () => {
 
     middleware.use(req, res, next);
 
-    expect(req.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(req.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
     expect(res.setHeader).toHaveBeenCalledWith('x-request-id', req.id);
     expect(next).toHaveBeenCalled();
   });
