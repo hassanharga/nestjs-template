@@ -16,10 +16,18 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/ (GET) returns the response envelope', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res) => {
+        expect(res.body).toMatchObject({
+          status: 200,
+          success: true,
+          data: 'Hello World!',
+          error: null,
+        });
+        expect(res.body.timestamp).toBeDefined();
+      });
   });
 });
