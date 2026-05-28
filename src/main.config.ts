@@ -24,7 +24,7 @@ export default function initializeConfig(
 
   // AllExceptionsFilter registered first — NestJS applies last-registered first,
   // so HttpExceptionFilter runs first (handles known HTTP errors), then AllExceptionsFilter (catches the rest).
-  app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+  app.useGlobalFilters(new AllExceptionsFilter(config), new HttpExceptionFilter(config));
 
   app.useLogger(app.get(Logger));
 }
