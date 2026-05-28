@@ -117,4 +117,16 @@ describe('GlobalExceptionFilter', () => {
     prodFilter.catch(new Error('Boom'), host);
     expect(json.mock.calls[0][0].error).not.toHaveProperty('stack');
   });
+
+  it('joins array message from HttpException body into a string', () => {
+    const { host, json } = buildHost('/api/submit');
+    const exception = new HttpException(
+      { message: ['field is required', 'must be a string'] },
+      400,
+    );
+    filter.catch(exception, host);
+    expect(json.mock.calls[0][0].error.message).toBe(
+      'field is required; must be a string',
+    );
+  });
 });

@@ -40,11 +40,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
-    if (this.isDev) {
-      this.logger.error(
-        exception instanceof Error ? exception.stack : String(exception),
-      );
-    }
+    this.logger.error(
+      exception instanceof Error ? exception.stack : String(exception),
+    );
 
     let status: number;
     let code: string;
@@ -60,7 +58,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       } else {
         const bodyObj = body as Record<string, unknown>;
         code = (bodyObj.code as string) ?? codeFromStatus(status);
-        message = (bodyObj.message as string) ?? exception.message;
+        const rawMessage = bodyObj.message;
+        message = Array.isArray(rawMessage)
+          ? rawMessage.join('; ')
+          : ((rawMessage as string) ?? exception.message);
       }
       stack = exception.stack;
     } else {
