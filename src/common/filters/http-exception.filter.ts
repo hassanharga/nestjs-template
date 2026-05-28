@@ -5,11 +5,19 @@ import {
   HttpException,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
+import { AppConfig } from '../config/config.schema';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
+
+  private readonly nodeEnv: string;
+
+  constructor(private readonly config: ConfigService<AppConfig>) {
+    this.nodeEnv = this.config.get<string>('NODE_ENV', 'development');
+  }
 
   catch(exception: HttpException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -23,9 +31,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exceptionResponse
         : ((exceptionResponse as Record<string, unknown>).message as string);
 
-    this.logger.error(
-      exception instanceof Error ? exception.stack : String(exception),
-    );
+    if (this.nodeEnv !== 'production') {
+      this.logger.error(
+        exception instanceof Error ? exception.stack : String(exception),
+      );
+    }
 
     response.status(status).json({
       statusCode: status,

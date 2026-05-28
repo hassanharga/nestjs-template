@@ -5,6 +5,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 
+function mockConfig(nodeEnv = 'test') {
+  return {
+    get: jest.fn((key: string, def?: string) =>
+      key === 'NODE_ENV' ? nodeEnv : def,
+    ),
+  } as any;
+}
+
 function buildHost(url: string) {
   const json = jest.fn();
   const status = jest.fn().mockReturnValue({ json });
@@ -24,7 +32,7 @@ describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter;
 
   beforeEach(() => {
-    filter = new HttpExceptionFilter();
+    filter = new HttpExceptionFilter(mockConfig());
   });
 
   it('returns 404 with correct shape for NotFoundException', () => {

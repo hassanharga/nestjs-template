@@ -1,5 +1,13 @@
 import { AllExceptionsFilter } from './all-exceptions.filter';
 
+function mockConfig(nodeEnv = 'test') {
+  return {
+    get: jest.fn((key: string, def?: string) =>
+      key === 'NODE_ENV' ? nodeEnv : def,
+    ),
+  } as any;
+}
+
 function buildHost(url: string) {
   const json = jest.fn();
   const status = jest.fn().mockReturnValue({ json });
@@ -19,7 +27,7 @@ describe('AllExceptionsFilter', () => {
   let filter: AllExceptionsFilter;
 
   beforeEach(() => {
-    filter = new AllExceptionsFilter();
+    filter = new AllExceptionsFilter(mockConfig());
   });
 
   it('returns 500 for an unknown Error', () => {
