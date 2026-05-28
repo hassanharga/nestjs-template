@@ -40,10 +40,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
-    this.logger.error(
-      exception instanceof Error ? exception.stack : String(exception),
-    );
-
     let status: number;
     let code: string;
     let message: string;
@@ -69,6 +65,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       code = 'INTERNAL_SERVER_ERROR';
       message = 'Internal server error';
       stack = exception instanceof Error ? exception.stack : undefined;
+    }
+
+    const logMessage =
+      exception instanceof Error ? exception.stack : String(exception);
+    if (status >= 500) {
+      this.logger.error(logMessage);
+    } else {
+      this.logger.warn(logMessage);
     }
 
     response.status(status).json({

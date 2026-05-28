@@ -16,16 +16,17 @@ export class ResponseInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const res = context.switchToHttp().getResponse<Response>();
-
     return next.handle().pipe(
-      map((data) => ({
-        status: res.statusCode,
-        success: true,
-        data: data ?? null,
-        error: null,
-        timestamp: new Date().toISOString(),
-      })),
+      map((data) => {
+        const res = context.switchToHttp().getResponse<Response>();
+        return {
+          status: res.statusCode,
+          success: true,
+          data: data ?? null,
+          error: null,
+          timestamp: new Date().toISOString(),
+        };
+      }),
     );
   }
 }
