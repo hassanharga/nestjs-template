@@ -22,6 +22,7 @@ export class ResponseInterceptor implements NestInterceptor {
         return {
           status: res.statusCode,
           success: true,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           data: data ?? null,
           error: null,
           timestamp: new Date().toISOString(),
