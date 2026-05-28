@@ -1,13 +1,12 @@
+/* eslint-disable no-console */
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { Logger } from 'nestjs-pino';
-import { cleanupOpenApiDoc, ZodValidationPipe } from 'nestjs-zod';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import initializeConfig from './main.config';
+import setupSwagger from './main.swagger';
+import { shutdown } from './main.shutdown';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -15,59 +14,24 @@ async function bootstrap() {
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT', 3000);
   const appName = config.get<string>('APP_NAME', 'nestjs-app');
-  const appVersion = config.get<string>('APP_VERSION', '1.0.0');
   const nodeEnv = config.get<string>('NODE_ENV', 'development');
-  const corsOrigins = config.get<string>('CORS_ORIGINS', '*');
-  const shutdownTimeout = config.get<number>('SHUTDOWN_TIMEOUT', 10000);
 
-  app.use(helmet());
+  const logger = new Logger('APP');
 
-  app.enableCors({
-    origin:
-      corsOrigins === '*' ? '*' : corsOrigins.split(',').map((o) => o.trim()),
-    credentials: true,
-  });
-
-  app.useGlobalPipes(new ZodValidationPipe());
-
-  // AllExceptionsFilter registered first — NestJS applies last-registered first,
-  // so HttpExceptionFilter runs first (handles known HTTP errors), then AllExceptionsFilter (catches the rest).
-  app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
-
-  app.useLogger(app.get(Logger));
+  initializeConfig(app, config);
 
   if (nodeEnv !== 'production') {
-    const document = SwaggerModule.createDocument(
-      app,
-      new DocumentBuilder()
-        .setTitle(appName)
-        .setVersion(appVersion)
-        .addBearerAuth()
-        .build(),
-    );
-    SwaggerModule.setup('api/docs', app, cleanupOpenApiDoc(document));
+    setupSwagger(app, config);
   }
 
-  app.enableShutdownHooks();
-
-  let isShuttingDown = false;
-  const shutdown = () => {
-    if (isShuttingDown) return;
-    isShuttingDown = true;
-    setTimeout(() => process.exit(1), shutdownTimeout).unref();
-    void app.close().then(() => process.exit(0));
-  };
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  shutdown(app, config);
 
   await app.listen(port, () => {
-    // eslint-disable-next-line no-console
-    console.log(`${appName} is running on port ${port} in ${nodeEnv} mode`);
+    logger.log(`${appName} is running on port ${port} in ${nodeEnv} mode`);
   });
 }
 
 bootstrap().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });
