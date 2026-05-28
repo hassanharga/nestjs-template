@@ -56,9 +56,24 @@ describe('ResponseInterceptor', () => {
 
   it('passes through /metrics without wrapping', (done) => {
     interceptor
-      .intercept(buildContext('/metrics', 200), buildHandler('raw-metrics-data'))
+      .intercept(
+        buildContext('/metrics', 200),
+        buildHandler('raw-metrics-data'),
+      )
       .subscribe((result) => {
         expect(result).toBe('raw-metrics-data');
+        done();
+      });
+  });
+
+  it('passes through /health/* without wrapping', (done) => {
+    interceptor
+      .intercept(
+        buildContext('/health/live', 200),
+        buildHandler({ status: 'ok' }),
+      )
+      .subscribe((result) => {
+        expect(result).toEqual({ status: 'ok' });
         done();
       });
   });

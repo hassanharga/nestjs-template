@@ -12,7 +12,7 @@ import { map } from 'rxjs/operators';
 export class ResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const req = context.switchToHttp().getRequest<{ path: string }>();
-    if (req.path === '/metrics') {
+    if (req.path === '/metrics' || req.path.startsWith('/health')) {
       return next.handle();
     }
 

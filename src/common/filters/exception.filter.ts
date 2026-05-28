@@ -21,6 +21,7 @@ function codeFromStatus(status: number): string {
     422: 'UNPROCESSABLE_ENTITY',
     429: 'TOO_MANY_REQUESTS',
     500: 'INTERNAL_SERVER_ERROR',
+    503: 'SERVICE_UNAVAILABLE',
   };
   return map[status] ?? 'HTTP_ERROR';
 }
