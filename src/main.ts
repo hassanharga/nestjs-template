@@ -27,7 +27,9 @@ async function bootstrap() {
   shutdown(app, config);
 
   await app.listen(port, () => {
-    logger.log(`${appName} is running on port ${port} in ${nodeEnv} mode`);
+    logger.log(
+      `${appName} is running on  http://localhost:${port} in ${nodeEnv} mode`,
+    );
   });
 }
 

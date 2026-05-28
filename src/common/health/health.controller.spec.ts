@@ -4,7 +4,12 @@ describe('HealthController', () => {
   let controller: HealthController;
 
   beforeEach(() => {
-    controller = new HealthController(null as any, null as any, null as any);
+    controller = new HealthController(
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+    );
   });
 
   it('GET /health/live returns { status: ok }', () => {

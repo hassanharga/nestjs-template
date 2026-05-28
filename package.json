@@ -18,7 +18,18 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:infra:up": "docker compose up -d mob-dispatch-service-redis mob-dispatch-service-mongodb",
+    "docker:infra:down": "docker compose down mob-dispatch-service-redis mob-dispatch-service-mongodb",
+    "docker:logs": "docker compose logs -f",
+    "docker:build": "docker compose build",
+    "docker:build:up": "docker compose up --build",
+    "docker:ps": "docker compose ps",
+    "docker:restart": "docker compose restart",
+    "docker:stop": "docker compose stop",
+    "docker:clean": "docker compose down -v --remove-orphans"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

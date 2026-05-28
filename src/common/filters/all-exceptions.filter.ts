@@ -3,12 +3,14 @@ import {
   Catch,
   ExceptionFilter,
   HttpStatus,
+  Injectable,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { AppConfig } from '../config/config.schema';
 
+@Injectable()
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
