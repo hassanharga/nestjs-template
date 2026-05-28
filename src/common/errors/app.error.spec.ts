@@ -23,6 +23,7 @@ describe('AppError', () => {
   });
 
   it('throw() puts code and message in the HttpException body', () => {
+    expect.assertions(2);
     const err = new AppError('MY_CODE', 'my message', 418);
     try {
       err.throw();
