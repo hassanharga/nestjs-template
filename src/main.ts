@@ -16,7 +16,7 @@ async function bootstrap() {
   const appName = config.get<string>('APP_NAME', 'nestjs-app');
   const nodeEnv = config.get<string>('NODE_ENV', 'development');
 
-  const logger = new Logger('APP');
+  const logger = new Logger(appName);
 
   initializeConfig(app, config);
 

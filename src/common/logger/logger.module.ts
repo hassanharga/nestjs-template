@@ -36,11 +36,13 @@ import { IncomingMessage, ServerResponse } from 'node:http';
               return requestId;
             },
             autoLogging: true,
+            quietReqLogger: true,
             // serializers: {
             //   req: (req: IncomingMessage) => ({
             //     id: req.id,
             //     method: req.method,
             //     url: req.url,
+            //     body: (req as IncomingMessage & { body?: unknown }).body,
             //   }),
             // },
             // customLogLevel: (
