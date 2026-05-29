@@ -1,13 +1,22 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Logger } from '@nestjs/common';
 
 export interface LogOptions {
   args?: boolean;
   result?: boolean;
-  level?: 'log' | 'debug' | 'verbose';
+  // level?: 'log' | 'debug' | 'verbose';
+}
+
+function trySerialize(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
 }
 
 export function Log(options: LogOptions = {}): MethodDecorator {
-  const { args = true, result = true, level = 'log' } = options;
+  const { args = true, result = true } = options;
 
   return (
     target: object,
@@ -21,11 +30,9 @@ export function Log(options: LogOptions = {}): MethodDecorator {
     const original = descriptor.value as (...a: unknown[]) => unknown;
 
     descriptor.value = function (...callArgs: unknown[]) {
-      if (args) {
-        logger[level](`[${methodName}] called`, callArgs);
-      } else {
-        logger[level](`[${methodName}] called`);
-      }
+      const argsStr =
+        args && callArgs.length ? ` args=${trySerialize(callArgs)}` : '';
+      logger.log(`[${methodName}] called${argsStr}`);
 
       const start = Date.now();
 
@@ -35,8 +42,7 @@ export function Log(options: LogOptions = {}): MethodDecorator {
       } catch (err) {
         const duration = Date.now() - start;
         logger.error(
-          `[${methodName}] failed in ${duration}ms`,
-          err instanceof Error ? err.message : String(err),
+          `[${methodName}] failed in ${duration}ms: ${err instanceof Error ? err.message : String(err)}`,
         );
         throw err;
       }
@@ -45,30 +51,24 @@ export function Log(options: LogOptions = {}): MethodDecorator {
         return returnValue.then(
           (res) => {
             const duration = Date.now() - start;
-            if (result) {
-              logger[level](`[${methodName}] completed in ${duration}ms`, res);
-            } else {
-              logger[level](`[${methodName}] completed in ${duration}ms`);
-            }
+            const resultStr = result ? ` result=${trySerialize(res)}` : '';
+            logger.log(
+              `[${methodName}] completed in ${duration}ms${resultStr}`,
+            );
             return res;
           },
           (err: unknown) => {
             const duration = Date.now() - start;
             logger.error(
-              `[${methodName}] failed in ${duration}ms`,
-              err instanceof Error ? err.message : String(err),
+              `[${methodName}] failed in ${duration}ms: ${err instanceof Error ? err.message : String(err)}`,
             );
             throw err;
           },
         );
       }
-
       const duration = Date.now() - start;
-      if (result) {
-        logger[level](`[${methodName}] completed in ${duration}ms`, returnValue);
-      } else {
-        logger[level](`[${methodName}] completed in ${duration}ms`);
-      }
+      const resultStr = result ? ` result=${trySerialize(returnValue)}` : '';
+      logger.log(`[${methodName}] completed in ${duration}ms${resultStr}`);
       return returnValue;
     };
 
