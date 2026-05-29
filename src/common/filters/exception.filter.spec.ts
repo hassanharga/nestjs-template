@@ -93,7 +93,7 @@ describe('GlobalExceptionFilter', () => {
       data: null,
       error: expect.objectContaining({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Internal server error',
+        message: 'Something exploded',
       }),
     });
   });

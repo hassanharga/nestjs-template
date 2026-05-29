@@ -30,10 +30,10 @@ function codeFromStatus(status: number): string {
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
-  private readonly isDev: boolean;
+  private readonly isNotProduction: boolean;
 
   constructor(private readonly config: ConfigService<AppConfig>) {
-    this.isDev =
+    this.isNotProduction =
       this.config.get<string>('NODE_ENV', 'development') !== 'production';
   }
 
@@ -64,17 +64,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       code = 'INTERNAL_SERVER_ERROR';
-      message = 'Internal server error';
+      message =
+        exception instanceof Error
+          ? exception.message
+          : 'Internal server error';
       stack = exception instanceof Error ? exception.stack : undefined;
     }
 
-    const logMessage =
-      exception instanceof Error ? exception.stack : String(exception);
-    if (status >= 500) {
-      this.logger.error(logMessage);
-    } else {
-      this.logger.warn(logMessage);
-    }
+    this.logger.error(stack);
 
     response.status(status).json({
       status,
@@ -83,7 +80,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       error: {
         code,
         message,
-        ...(this.isDev && stack !== undefined && { stack }),
+        ...(this.isNotProduction && stack !== undefined && { stack }),
       },
       timestamp: new Date().toISOString(),
     });
