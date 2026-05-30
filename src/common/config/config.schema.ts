@@ -15,6 +15,7 @@ export const configSchema = z.object({
   APP_VERSION: z.string().default('1.0.0'),
   SHUTDOWN_TIMEOUT: z.coerce.number().int().positive().default(10000),
   HEALTH_MEMORY_HEAP_MB: z.coerce.number().int().positive().default(150),
+  HEALTH_RSS_MEMORY_MB: z.coerce.number().int().positive().default(150),
   HEALTH_DISK_THRESHOLD_PERCENT: z.coerce.number().min(0).max(1).default(0.95),
 });
 

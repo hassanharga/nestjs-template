@@ -4,18 +4,18 @@ A production-ready NestJS starter with structured logging, validation, health ch
 
 ## Stack
 
-| Concern | Library |
-|---|---|
-| Framework | NestJS v11 (Express) |
-| Language | TypeScript 5.7 |
-| Validation | nestjs-zod + Zod |
-| Logging | nestjs-pino (JSON) |
-| Config | @nestjs/config + Zod schema |
-| API docs | @nestjs/swagger |
-| Health | @nestjs/terminus |
-| Metrics | @willsoto/nestjs-prometheus |
-| Rate limiting | @nestjs/throttler |
-| Security | helmet |
+| Concern       | Library                     |
+| ------------- | --------------------------- |
+| Framework     | NestJS v11 (Express)        |
+| Language      | TypeScript 5.7              |
+| Validation    | nestjs-zod + Zod            |
+| Logging       | nestjs-pino (JSON)          |
+| Config        | @nestjs/config + Zod schema |
+| API docs      | @nestjs/swagger             |
+| Health        | @nestjs/terminus            |
+| Metrics       | @willsoto/nestjs-prometheus |
+| Rate limiting | @nestjs/throttler           |
+| Security      | helmet                      |
 
 ## Getting started
 
@@ -45,19 +45,20 @@ pnpm run format        # Prettier format
 
 Copy `.env.example` (once created) to `.env` and override as needed. All variables have defaults.
 
-| Variable | Default | Description |
-|---|---|---|
-| `NODE_ENV` | `development` | `development` \| `staging` \| `production` \| `test` |
-| `PORT` | `3000` | HTTP server port |
-| `APP_NAME` | `nestjs-app` | Application name (used in logs) |
-| `APP_VERSION` | `1.0.0` | Application version (shown in Swagger) |
-| `LOG_LEVEL` | `info` | `trace` \| `debug` \| `info` \| `warn` \| `error` |
-| `CORS_ORIGINS` | `*` | Comma-separated origins, or `*` for all |
-| `THROTTLE_TTL` | `60` | Rate limit window in seconds |
-| `THROTTLE_LIMIT` | `100` | Max requests per window |
-| `SHUTDOWN_TIMEOUT` | `10000` | Graceful shutdown timeout in ms |
-| `HEALTH_MEMORY_HEAP_MB` | `150` | Max heap memory in MB for health check |
-| `HEALTH_DISK_THRESHOLD_PERCENT` | `0.95` | Max disk usage (0–1) for health check |
+| Variable                        | Default       | Description                                          |
+| ------------------------------- | ------------- | ---------------------------------------------------- |
+| `NODE_ENV`                      | `development` | `development` \| `staging` \| `production` \| `test` |
+| `PORT`                          | `3000`        | HTTP server port                                     |
+| `APP_NAME`                      | `nestjs-app`  | Application name (used in logs)                      |
+| `APP_VERSION`                   | `1.0.0`       | Application version (shown in Swagger)               |
+| `LOG_LEVEL`                     | `info`        | `trace` \| `debug` \| `info` \| `warn` \| `error`    |
+| `CORS_ORIGINS`                  | `*`           | Comma-separated origins, or `*` for all              |
+| `THROTTLE_TTL`                  | `60`          | Rate limit window in seconds                         |
+| `THROTTLE_LIMIT`                | `100`         | Max requests per window                              |
+| `SHUTDOWN_TIMEOUT`              | `10000`       | Graceful shutdown timeout in ms                      |
+| `HEALTH_MEMORY_HEAP_MB`         | `150`         | Max heap memory in MB for health check               |
+| `HEALTH_RSS_MEMORY_MB`          | `150`         | Max RSS memory in MB for health check                |
+| `HEALTH_DISK_THRESHOLD_PERCENT` | `0.95`        | Max disk usage (0–1) for health check                |
 
 ## What's included
 
@@ -83,6 +84,7 @@ Every response — success or error — follows a consistent envelope:
 ### Prometheus metrics
 
 `GET /metrics` exposes:
+
 - `http_requests_total` — counter by method, path, status_code
 - `http_request_duration_seconds` — histogram by method, path, status_code
 

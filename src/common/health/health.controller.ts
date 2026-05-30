@@ -29,6 +29,8 @@ export class HealthController {
   ready() {
     const heapBytes =
       this.config.get('HEALTH_MEMORY_HEAP_MB', { infer: true })! * 1024 * 1024;
+    const rssBytes =
+      this.config.get('HEALTH_RSS_MEMORY_MB', { infer: true })! * 1024 * 1024;
 
     const diskThreshold = this.config.get('HEALTH_DISK_THRESHOLD_PERCENT', {
       infer: true,
@@ -36,7 +38,7 @@ export class HealthController {
 
     return this.health.check([
       () => this.memory.checkHeap('memory_heap', heapBytes),
-      () => this.memory.checkHeap('memory_rss', heapBytes),
+      () => this.memory.checkHeap('memory_rss', rssBytes),
       () =>
         this.disk.checkStorage('disk', {
           path: '/',
