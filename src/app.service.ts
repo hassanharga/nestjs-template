@@ -16,4 +16,12 @@ export class AppService {
     }
     return ok({ id, name: 'Example Item' });
   }
+
+  @Log()
+  setItem(id: number): Result<{ id: number; name: string }, NotFoundError> {
+    if (!id) {
+      return err(new NotFoundError(`invalid id`));
+    }
+    return ok({ id, name: `Example Item ${id}` });
+  }
 }

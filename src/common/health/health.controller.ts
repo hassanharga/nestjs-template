@@ -36,11 +36,54 @@ export class HealthController {
 
     return this.health.check([
       () => this.memory.checkHeap('memory_heap', heapBytes),
+      () => this.memory.checkHeap('memory_rss', heapBytes),
       () =>
         this.disk.checkStorage('disk', {
           path: '/',
           thresholdPercent: diskThreshold,
         }),
+      // async () => {
+      //   try {
+      //     const conn = getConnection();
+      //     if (conn.readyState === 1) {
+      //       return {
+      //         mongodb: {
+      //           status: 'up',
+      //         },
+      //       };
+      //     }
+      //     return {
+      //       mongodb: {
+      //         status: 'down',
+      //         message: 'MongoDB connection not ready',
+      //       },
+      //     };
+      //   } catch (error) {
+      //     return {
+      //       mongodb: {
+      //         status: 'down',
+      //         message: error instanceof Error ? error.message : 'Unknown error',
+      //       },
+      //     };
+      //   }
+      // },
+      // async () => {
+      //   try {
+      //     await this.redis.get('health-check');
+      //     return {
+      //       redis: {
+      //         status: 'up',
+      //       },
+      //     };
+      //   } catch (error) {
+      //     return {
+      //       redis: {
+      //         status: 'down',
+      //         message: error instanceof Error ? error.message : 'Unknown error',
+      //       },
+      //     };
+      //   }
+      // },
     ]);
   }
 }

@@ -1,5 +1,13 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { AppService } from './app.service';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller()
 export class AppController {
@@ -8,6 +16,21 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Post('items')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { id: { type: 'number' } },
+      required: ['id'],
+    },
+  })
+  setItem(@Body() body: { id: number }) {
+    return this.appService.setItem(body.id).match(
+      (item) => item,
+      (error) => error.throw(),
+    );
   }
 
   @Get('items/:id')

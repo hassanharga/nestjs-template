@@ -8,6 +8,8 @@ import setupSwagger from './main.swagger';
 import { shutdown } from './main.shutdown';
 import { Logger } from '@nestjs/common';
 
+// const apiPrefix = 'api';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
@@ -28,8 +30,9 @@ async function bootstrap() {
 
   await app.listen(port, () => {
     logger.log(
-      `${appName} is running on  http://localhost:${port} in ${nodeEnv} mode`,
+      `${appName} is running on http://localhost:${port} in ${nodeEnv} mode`,
     );
+    logger.log(`Swagger documentation: http://localhost:${port}/api`);
   });
 }
 
