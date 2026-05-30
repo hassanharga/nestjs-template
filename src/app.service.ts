@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Result, ok, err } from 'neverthrow';
-import { NotFoundError } from './common/errors';
 import { Log } from './common/decorators/log.decorator';
 
 @Injectable()
@@ -10,17 +9,17 @@ export class AppService {
   }
 
   @Log()
-  getItem(id: number): Result<{ id: number; name: string }, NotFoundError> {
+  getItem(id: number): Result<{ id: number; name: string }, NotFoundException> {
     if (id !== 1) {
-      return err(new NotFoundError(`Item ${id} not found`));
+      return err(new NotFoundException(`Item ${id} not found`));
     }
     return ok({ id, name: 'Example Item' });
   }
 
   @Log()
-  setItem(id: number): Result<{ id: number; name: string }, NotFoundError> {
+  setItem(id: number): Result<{ id: number; name: string }, NotFoundException> {
     if (!id) {
-      return err(new NotFoundError(`invalid id`));
+      return err(new NotFoundException(`invalid id`));
     }
     return ok({ id, name: `Example Item ${id}` });
   }

@@ -34,7 +34,7 @@ describe('GlobalExceptionFilter', () => {
     filter = new GlobalExceptionFilter(mockConfig());
   });
 
-  it('formats AppError-sourced HttpException with its code', () => {
+  it('formats HttpException with explicit code in body', () => {
     const { host, json, status } = buildHost();
     const exception = new HttpException(
       { code: 'NOT_FOUND', message: 'User not found' },

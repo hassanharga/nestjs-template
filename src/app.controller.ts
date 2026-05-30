@@ -29,7 +29,9 @@ export class AppController {
   setItem(@Body() body: { id: number }) {
     return this.appService.setItem(body.id).match(
       (item) => item,
-      (error) => error.throw(),
+      (error) => {
+        throw error;
+      },
     );
   }
 
@@ -37,7 +39,9 @@ export class AppController {
   getItem(@Param('id', ParseIntPipe) id: number) {
     return this.appService.getItem(id).match(
       (item) => item,
-      (error) => error.throw(),
+      (error) => {
+        throw error;
+      },
     );
   }
 }
