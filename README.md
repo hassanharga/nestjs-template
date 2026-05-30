@@ -1,99 +1,132 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS Backend Template
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-ready NestJS starter with structured logging, validation, health checks, Prometheus metrics, and standardized API responses.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+| Concern | Library |
+|---|---|
+| Framework | NestJS v11 (Express) |
+| Language | TypeScript 5.7 |
+| Validation | nestjs-zod + Zod |
+| Logging | nestjs-pino (JSON) |
+| Config | @nestjs/config + Zod schema |
+| API docs | @nestjs/swagger |
+| Health | @nestjs/terminus |
+| Metrics | @willsoto/nestjs-prometheus |
+| Rate limiting | @nestjs/throttler |
+| Security | helmet |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Getting started
 
 ```bash
-$ pnpm install
+pnpm install
+pnpm run start:dev
 ```
 
-## Compile and run the project
+Server starts on `http://localhost:3000`. Swagger UI is available at `http://localhost:3000/api` in non-production environments.
+
+## Commands
 
 ```bash
-# development
-$ pnpm run start
+pnpm run start:dev     # Development with watch mode
+pnpm run build         # Compile to dist/
+pnpm run start:prod    # Run compiled output
 
-# watch mode
-$ pnpm run start:dev
+pnpm run test          # Unit tests
+pnpm run test:e2e      # E2E tests
+pnpm run test:cov      # Coverage report
 
-# production mode
-$ pnpm run start:prod
+pnpm run lint          # ESLint with auto-fix
+pnpm run format        # Prettier format
 ```
 
-## Run tests
+## Environment variables
 
-```bash
-# unit tests
-$ pnpm run test
+Copy `.env.example` (once created) to `.env` and override as needed. All variables have defaults.
 
-# e2e tests
-$ pnpm run test:e2e
+| Variable | Default | Description |
+|---|---|---|
+| `NODE_ENV` | `development` | `development` \| `staging` \| `production` \| `test` |
+| `PORT` | `3000` | HTTP server port |
+| `APP_NAME` | `nestjs-app` | Application name (used in logs) |
+| `APP_VERSION` | `1.0.0` | Application version (shown in Swagger) |
+| `LOG_LEVEL` | `info` | `trace` \| `debug` \| `info` \| `warn` \| `error` |
+| `CORS_ORIGINS` | `*` | Comma-separated origins, or `*` for all |
+| `THROTTLE_TTL` | `60` | Rate limit window in seconds |
+| `THROTTLE_LIMIT` | `100` | Max requests per window |
+| `SHUTDOWN_TIMEOUT` | `10000` | Graceful shutdown timeout in ms |
+| `HEALTH_MEMORY_HEAP_MB` | `150` | Max heap memory in MB for health check |
+| `HEALTH_DISK_THRESHOLD_PERCENT` | `0.95` | Max disk usage (0–1) for health check |
 
-# test coverage
-$ pnpm run test:cov
+## What's included
+
+### Standardized API responses
+
+Every response — success or error — follows a consistent envelope:
+
+```json
+// Success
+{ "status": 200, "success": true, "data": {}, "error": null, "timestamp": "..." }
+
+// Error
+{ "status": 404, "success": false, "data": null, "error": { "code": "NOT_FOUND", "message": "..." }, "timestamp": "..." }
 ```
 
-## Deployment
+`/health/*` and `/metrics` endpoints bypass the envelope. Stack traces are included in errors in non-production environments.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Health checks
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- `GET /health/live` — liveness probe (always returns `{ status: "ok" }`)
+- `GET /health/ready` — readiness probe (checks heap memory and disk usage)
 
-```bash
-$ pnpm install -g mau
-$ mau deploy
+### Prometheus metrics
+
+`GET /metrics` exposes:
+- `http_requests_total` — counter by method, path, status_code
+- `http_request_duration_seconds` — histogram by method, path, status_code
+
+### `@Log()` decorator
+
+Logs method entry (with args), exit (with result and duration), and errors. Works on sync and async methods.
+
+```typescript
+@Log()                            // log args + result
+@Log({ args: false })             // skip args
+@Log({ result: false })           // skip result
+async getItem(id: string) { ... }
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Rate limiting
 
-## Resources
+Global `ThrottlerGuard` applies to all routes. Skip per-route with `@SkipThrottle()`. Configured via `THROTTLE_TTL` and `THROTTLE_LIMIT`.
 
-Check out a few resources that may come in handy when working with NestJS:
+### URI versioning
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+API versioning is enabled with `VersioningType.URI`. Use `@Version('1')` on controllers or routes to produce `/v1/...` paths.
 
-## Support
+### Graceful shutdown
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Handles `SIGTERM` and `SIGINT`. Waits up to `SHUTDOWN_TIMEOUT` ms for in-flight requests to complete before exiting.
 
-## Stay in touch
+## Project structure
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```
+src/
+  common/
+    config/         # Zod-validated config schema and module
+    decorators/     # @Log() method decorator
+    filters/        # GlobalExceptionFilter
+    health/         # /health/live and /health/ready
+    interceptors/   # ResponseInterceptor (envelope wrapper)
+    logger/         # nestjs-pino setup
+    monitoring/     # Prometheus metrics interceptor and module
+  main.ts           # Bootstrap
+  main.config.ts    # App-level config (CORS, helmet, versioning, pipes)
+  main.swagger.ts   # Swagger setup
+  main.shutdown.ts  # Graceful shutdown
+```
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+MIT
