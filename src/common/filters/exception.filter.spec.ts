@@ -3,6 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ZodValidationException } from 'nestjs-zod';
 import { GlobalExceptionFilter } from './exception.filter';
 
 function mockConfig(nodeEnv = 'test') {
@@ -115,6 +116,29 @@ describe('GlobalExceptionFilter', () => {
     const { host, json } = buildHost();
     prodFilter.catch(new Error('Boom'), host);
     expect(json.mock.calls[0][0].error).not.toHaveProperty('stack');
+  });
+
+  it('formats ZodValidationException with VALIDATION_ERROR code and issues', () => {
+    const { host, json, status } = buildHost();
+    const zodError = {
+      issues: [
+        { path: ['name'], message: 'Required', code: 'invalid_type' },
+        { path: ['age'], message: 'Expected number', code: 'invalid_type' },
+      ],
+    };
+    filter.catch(new ZodValidationException(zodError), host);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json.mock.calls[0][0]).toMatchObject({
+      status: 400,
+      success: false,
+      data: null,
+      error: expect.objectContaining({
+        code: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        errors: zodError.issues,
+      }),
+    });
   });
 
   it('joins array message from HttpException body into a string', () => {

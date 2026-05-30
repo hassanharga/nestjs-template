@@ -88,6 +88,35 @@ Every response — success or error — follows a consistent envelope:
 - `http_requests_total` — counter by method, path, status_code
 - `http_request_duration_seconds` — histogram by method, path, status_code
 
+### Zod DTOs and validation
+
+Use `createZodDto` from `nestjs-zod` to define request/response shapes. The global `ZodValidationPipe` validates incoming bodies automatically.
+
+```typescript
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+
+const CreateItemSchema = z.object({
+  id: z.number().int().positive().describe('Item ID').meta({ example: 42 }),
+  name: z
+    .string()
+    .min(1)
+    .max(100)
+    .describe('Item name')
+    .meta({ example: 'My Item' }),
+});
+
+export class CreateItemDto extends createZodDto(CreateItemSchema) {}
+
+// Partial schema for PATCH endpoints — all fields become optional
+const UpdateItemSchema = CreateItemSchema.partial();
+export class UpdateItemDto extends createZodDto(UpdateItemSchema) {}
+```
+
+- `.describe()` sets the field description in Swagger
+- `.meta({ example: value })` sets the Swagger "Example Value" (use singular `example`, not `examples`)
+- `.partial()` / `.partial({ field: true })` derives optional schemas for update endpoints
+
 ### `@Log()` decorator
 
 Logs method entry (with args), exit (with result and duration), and errors. Works on sync and async methods.

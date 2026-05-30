@@ -38,12 +38,7 @@ export class AppController {
   @ApiResponse({ status: 201, type: ItemDto, description: 'Item created' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   setItem(@Body() body: SetItemDto) {
-    return this.appService.setItem(body).match(
-      (item) => item,
-      (error) => {
-        throw error;
-      },
-    );
+    return this.appService.setItem(body);
   }
 
   @Get('items/:id')
@@ -52,11 +47,6 @@ export class AppController {
   @ApiResponse({ status: 200, type: ItemDto, description: 'Item found' })
   @ApiResponse({ status: 404, description: 'Item not found' })
   getItem(@Param('id', ParseIntPipe) id: number) {
-    return this.appService.getItem(id).match(
-      (item) => item,
-      (error) => {
-        throw error;
-      },
-    );
+    return this.appService.getItem(id);
   }
 }

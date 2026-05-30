@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   CallHandler,
   ExecutionContext,
@@ -5,6 +6,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { Err, Ok } from 'neverthrow';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -18,12 +20,14 @@ export class ResponseInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
+        if (data instanceof Err) throw data.error;
+        const value = data instanceof Ok ? data.value : data;
+
         const res = context.switchToHttp().getResponse<Response>();
         return {
           status: res.statusCode,
           success: true,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          data: data ?? null,
+          data: value ?? null,
           error: null,
           timestamp: new Date().toISOString(),
         };

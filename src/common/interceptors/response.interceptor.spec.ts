@@ -1,3 +1,5 @@
+import { NotFoundException } from '@nestjs/common';
+import { err, ok } from 'neverthrow';
 import { of } from 'rxjs';
 import { ResponseInterceptor } from './response.interceptor';
 
@@ -75,6 +77,30 @@ describe('ResponseInterceptor', () => {
       .subscribe((result) => {
         expect(result).toEqual({ status: 'ok' });
         done();
+      });
+  });
+
+  it('unwraps ok Result into the data envelope', (done) => {
+    interceptor
+      .intercept(buildContext('/api/items', 200), buildHandler(ok({ id: 1 })))
+      .subscribe((result) => {
+        expect(result).toMatchObject({
+          success: true,
+          data: { id: 1 },
+        });
+        done();
+      });
+  });
+
+  it('throws when Result is an err', (done) => {
+    const error = new NotFoundException('not found');
+    interceptor
+      .intercept(buildContext('/api/items', 200), buildHandler(err(error)))
+      .subscribe({
+        error: (thrown) => {
+          expect(thrown).toBe(error);
+          done();
+        },
       });
   });
 });

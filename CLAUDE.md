@@ -7,6 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Framework:** NestJS v11 (Express adapter)
 - **Language:** TypeScript 5.7 (CommonJS output, ES2023 target)
 - **Package manager:** pnpm — do not use npm or yarn
+- **Validation:** nestjs-zod v5 + Zod v4 — use `createZodDto`, never class-validator/class-transformer
+- **Logging:** nestjs-pino — structured JSON, use `@Log()` decorator (`src/common/decorators/log.decorator.ts`) for method-level tracing
+- **Result type:** neverthrow — services return `Result<T, E>`
+- **Config:** Zod-validated schema in `src/common/config/config.schema.ts` — add all env vars there
+- **API docs:** @nestjs/swagger — Swagger UI at `/api` (non-production only)
 
 ## Commands
 
@@ -26,10 +31,12 @@ pnpm run format        # Prettier format (src/**/*.ts, test/**/*.ts)
 ## Code Style
 
 Prettier config (`.prettierrc`):
+
 - Single quotes
 - Trailing commas: `"all"`
 
 ESLint uses flat config (`eslint.config.mjs`) with TypeScript Project Service. Notable rule overrides:
+
 - `@typescript-eslint/no-explicit-any`: off
 - `@typescript-eslint/no-floating-promises`: warn
 - `@typescript-eslint/no-unsafe-argument`: warn
@@ -56,3 +63,5 @@ Use **Conventional Commits**: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `
 - `@swc/core` is present in devDependencies but the NestJS build pipeline uses `ts-jest` by default — SWC is not wired into the build without additional config.
 - Server port defaults to `3000`; override with the `PORT` environment variable.
 - `.env` and `.env.*.local` files are gitignored — no `.env.example` exists yet.
+- **nestjs-zod v5** has no `patchNestJsSwagger` — Swagger integration is automatic; `cleanupOpenApiDoc` in `main.swagger.ts` is the only required hook.
+- **Swagger examples:** use `.meta({ example: value })` (singular) on Zod fields. `examples` (plural array) is JSON Schema and is ignored by Swagger UI's "Example Value" display.

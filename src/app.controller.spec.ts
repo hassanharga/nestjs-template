@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpException } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -22,12 +21,15 @@ describe('AppController', () => {
   });
 
   describe('getItem', () => {
-    it('returns the item when id exists', () => {
-      expect(appController.getItem(1)).toEqual({ id: 1, name: 'Example Item' });
+    it('returns ok Result when id exists', () => {
+      const result = appController.getItem(1);
+      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrap()).toEqual({ id: 1, name: 'Example Item' });
     });
 
-    it('throws HttpException with 404 when id does not exist', () => {
-      expect(() => appController.getItem(99)).toThrow(HttpException);
+    it('returns err Result when id does not exist', () => {
+      const result = appController.getItem(99);
+      expect(result.isErr()).toBe(true);
     });
   });
 });
