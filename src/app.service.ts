@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Result, ok, err } from 'neverthrow';
 import { Log } from './common/decorators/log.decorator';
+import { SetItemDto } from './app.dto';
 
 @Injectable()
 export class AppService {
@@ -17,10 +18,9 @@ export class AppService {
   }
 
   @Log()
-  setItem(id: number): Result<{ id: number; name: string }, NotFoundException> {
-    if (!id) {
-      return err(new NotFoundException(`invalid id`));
-    }
-    return ok({ id, name: `Example Item ${id}` });
+  setItem(
+    dto: SetItemDto,
+  ): Result<{ id: number; name: string }, NotFoundException> {
+    return ok({ id: dto.id, name: dto.name });
   }
 }
