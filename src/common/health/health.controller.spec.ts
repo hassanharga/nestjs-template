@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { HealthController } from './health.controller';
 
 describe('HealthController', () => {

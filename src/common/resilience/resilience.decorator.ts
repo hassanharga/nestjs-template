@@ -17,13 +17,12 @@ export function Resilience(options: ResilienceOptions = {}): MethodDecorator {
     let policy: IPolicy | undefined;
 
     descriptor.value = function (...args: unknown[]) {
-      if (!policy) {
-        policy = buildPolicy(
-          { ...options, name },
-          ResilienceRegistry.getDefaults(),
-          ResilienceRegistry.getObserver(),
-        );
-      }
+      policy ??= buildPolicy(
+        { ...options, name },
+        ResilienceRegistry.getDefaults(),
+        ResilienceRegistry.getObserver(),
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return policy.execute(() => original.apply(this, args));
     };
 

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { HttpMetricsInterceptor } from './http-metrics.interceptor';
 import { of } from 'rxjs';
 
