@@ -51,7 +51,7 @@ ESLint uses flat config (`eslint.config.mjs`) with TypeScript Project Service. N
 
 - Unit tests live alongside source files in `src/` (`*.spec.ts`).
 - E2E tests live in `test/` and use a separate Jest config (`test/jest-e2e.json`).
-- Jest config is embedded in `package.json` (no separate `jest.config.js`).
+- Unit Jest config lives in `jest.config.ts` (root); E2E config in `test/jest-e2e.json`. Both transform `.ts` with `ts-jest` and `.js` with `@swc/jest`, and whitelist cockatiel in `transformIgnorePatterns` (cockatiel ships pure ESM, so it must be transformed for Jest's CommonJS runtime).
 
 ## Git Conventions
 
@@ -60,7 +60,7 @@ Use **Conventional Commits**: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `
 ## Key Gotchas
 
 - Only `@nestjs/platform-express` is installed. Adding Fastify requires explicit installation and bootstrap changes.
-- `@swc/core` is present in devDependencies but the NestJS build pipeline uses `ts-jest` by default — SWC is not wired into the build without additional config.
+- `@swc/core` is present in devDependencies but the NestJS build pipeline uses `ts-jest` by default — SWC is not wired into the build (only into the Jest test transform via `@swc/jest`) without additional config.
 - Server port defaults to `3000`; override with the `PORT` environment variable.
 - `.env` and `.env.*.local` files are gitignored — no `.env.example` exists yet.
 - **nestjs-zod v5** has no `patchNestJsSwagger` — Swagger integration is automatic; `cleanupOpenApiDoc` in `main.swagger.ts` is the only required hook.
