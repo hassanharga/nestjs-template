@@ -16,6 +16,10 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
+  afterEach(async () => {
+    await app.close();
+  });
+
   it('/ (GET) returns the response envelope', () => {
     return request(app.getHttpServer())
       .get('/')

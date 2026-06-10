@@ -10,6 +10,7 @@ import { GlobalExceptionFilter } from './common/filters/exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HealthModule } from './common/health/health.module';
 import { MonitoringModule } from './common/monitoring/monitoring.module';
+import { ResilienceModule } from './common/resilience';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { MonitoringModule } from './common/monitoring/monitoring.module';
     AppLoggerModule,
     HealthModule,
     MonitoringModule,
+    ResilienceModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
