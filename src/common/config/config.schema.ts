@@ -17,6 +17,38 @@ export const configSchema = z.object({
   HEALTH_MEMORY_HEAP_MB: z.coerce.number().int().positive().default(150),
   HEALTH_RSS_MEMORY_MB: z.coerce.number().int().positive().default(150),
   HEALTH_DISK_THRESHOLD_PERCENT: z.coerce.number().min(0).max(1).default(0.95),
+  RESILIENCE_RETRY_MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
+  RESILIENCE_RETRY_INITIAL_DELAY_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(128),
+  RESILIENCE_RETRY_MAX_DELAY_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(30000),
+  RESILIENCE_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
+  RESILIENCE_CIRCUIT_BREAKER_THRESHOLD: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(5),
+  RESILIENCE_CIRCUIT_BREAKER_HALF_OPEN_AFTER_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(10000),
+  RESILIENCE_BULKHEAD_MAX_CONCURRENT: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(10),
+  RESILIENCE_BULKHEAD_MAX_QUEUE: z.coerce
+    .number()
+    .int()
+    .nonnegative()
+    .default(0),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

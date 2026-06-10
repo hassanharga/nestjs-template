@@ -35,4 +35,23 @@ describe('configSchema', () => {
     expect(result.THROTTLE_TTL).toBe(30);
     expect(result.THROTTLE_LIMIT).toBe(50);
   });
+
+  describe('resilience defaults', () => {
+    it('applies resilience fallback defaults', () => {
+      const parsed = configSchema.parse({});
+      expect(parsed.RESILIENCE_RETRY_MAX_ATTEMPTS).toBe(3);
+      expect(parsed.RESILIENCE_RETRY_INITIAL_DELAY_MS).toBe(128);
+      expect(parsed.RESILIENCE_RETRY_MAX_DELAY_MS).toBe(30000);
+      expect(parsed.RESILIENCE_TIMEOUT_MS).toBe(5000);
+      expect(parsed.RESILIENCE_CIRCUIT_BREAKER_THRESHOLD).toBe(5);
+      expect(parsed.RESILIENCE_CIRCUIT_BREAKER_HALF_OPEN_AFTER_MS).toBe(10000);
+      expect(parsed.RESILIENCE_BULKHEAD_MAX_CONCURRENT).toBe(10);
+      expect(parsed.RESILIENCE_BULKHEAD_MAX_QUEUE).toBe(0);
+    });
+
+    it('coerces resilience values from strings', () => {
+      const parsed = configSchema.parse({ RESILIENCE_RETRY_MAX_ATTEMPTS: '7' });
+      expect(parsed.RESILIENCE_RETRY_MAX_ATTEMPTS).toBe(7);
+    });
+  });
 });
