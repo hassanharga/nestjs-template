@@ -1,4 +1,5 @@
 export interface RetryOptions {
+  /** Additional retries; maxAttempts=3 permits up to four executions. */
   maxAttempts?: number;
   initialDelayMs?: number;
   maxDelayMs?: number;
@@ -21,7 +22,10 @@ export interface BulkheadOptions {
 export interface ResilienceOptions {
   name?: string;
   retry?: boolean | RetryOptions;
+  /** Timeout for one attempt. Operations must honor context.signal. */
   timeout?: boolean | TimeoutOptions;
+  /** Optional overall budget, including retry backoff. */
+  totalTimeout?: TimeoutOptions;
   circuitBreaker?: boolean | CircuitBreakerOptions;
   bulkhead?: boolean | BulkheadOptions;
 }
@@ -35,7 +39,7 @@ export interface ResilienceDefaults {
 
 export interface ResilienceObserverLike {
   recordRetry(policy: string): void;
-  recordTimeout(policy: string): void;
+  recordTimeout(policy: string, kind?: 'attempt' | 'total'): void;
   recordBreakerOpen(policy: string): void;
   recordBreakerHalfOpen(policy: string): void;
   recordBreakerClose(policy: string): void;

@@ -12,24 +12,31 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write src test scripts docs *.json *.ts *.mjs *.md .github/workflows/*.yml docker-compose*.yml",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prepare": "husky",
-    "docker:up": "docker compose up -d",
+    "docker:up": "docker compose up --build -d",
     "docker:down": "docker compose down",
-    "docker:infra:up": "docker compose up -d mob-dispatch-service-redis mob-dispatch-service-mongodb",
-    "docker:infra:down": "docker compose down mob-dispatch-service-redis mob-dispatch-service-mongodb",
     "docker:logs": "docker compose logs -f",
     "docker:build": "docker compose build",
     "docker:build:up": "docker compose up --build",
     "docker:ps": "docker compose ps",
     "docker:restart": "docker compose restart",
     "docker:stop": "docker compose stop",
-    "docker:clean": "docker compose down -v --remove-orphans"
+    "template:init": "node scripts/init-template.mjs",
+    "test:tooling": "node --test --test-concurrency=1 scripts/*.test.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "lint:check": "eslint \"{src,test}/**/*.ts\"",
+    "typecheck": "tsc --noEmit --incremental false -p tsconfig.json",
+    "format:check": "prettier --check src test scripts docs *.json *.ts *.mjs *.md .github/workflows/*.yml docker-compose*.yml",
+    "docker:monitoring:up": "docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up --build -d",
+    "docker:monitoring:down": "docker compose -f docker-compose.yml -f docker-compose.monitoring.yml down",
+    "api:generate": "pnpm build && node dist/openapi/export.js",
+    "api:check": "pnpm build && node dist/openapi/export.js --check"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -80,5 +87,10 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
+  },
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=26.13.0 <27",
+    "pnpm": ">=12.16.1 <13"
   }
 }

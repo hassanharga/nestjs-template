@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Result, ok, err } from 'neverthrow';
-import { Log } from './common/decorators/log.decorator';
+import { Log } from '../../common/decorators/log.decorator';
 import { SetItemDto } from './app.dto';
 
 @Injectable()

@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   HttpException,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -25,6 +26,7 @@ function buildHost() {
     host: {
       switchToHttp: () => ({
         getResponse: () => ({ status }),
+        getRequest: () => ({ path: '/v1/items', id: 'request-123' }),
       }),
     } as any,
     json,
@@ -120,6 +122,8 @@ describe('GlobalExceptionFilter', () => {
     const { host, json } = buildHost();
     prodFilter.catch(new Error('Boom'), host);
     expect(json.mock.calls[0][0].error).not.toHaveProperty('stack');
+    expect(json.mock.calls[0][0].error.message).toBe('Internal server error');
+    expect(json.mock.calls[0][0].requestId).toBe('request-123');
   });
 
   it('formats ZodValidationException with VALIDATION_ERROR code and issues', () => {
@@ -156,4 +160,20 @@ describe('GlobalExceptionFilter', () => {
       'field is required; must be a string',
     );
   });
+});
+
+it('logs client errors as warnings and server errors as errors in production', () => {
+  const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+  const error = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+  try {
+    const filter = new GlobalExceptionFilter(mockConfig('production'));
+    filter.catch(new NotFoundException('Missing'), buildHost().host);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(error).not.toHaveBeenCalled();
+    filter.catch(new Error('private failure'), buildHost().host);
+    expect(error).toHaveBeenCalledTimes(1);
+  } finally {
+    warn.mockRestore();
+    error.mockRestore();
+  }
 });

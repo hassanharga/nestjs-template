@@ -7,7 +7,5 @@
     "^.+\\.ts$": "ts-jest",
     "^.+\\.js$": "@swc/jest"
   },
-  "transformIgnorePatterns": [
-    "node_modules/(?!(.pnpm/.*cockatiel|cockatiel))"
-  ]
+  "transformIgnorePatterns": ["node_modules/(?!(.pnpm/.*cockatiel|cockatiel))"]
 }

@@ -1,0 +1,56 @@
+name: Verify template
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HUSKY: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint:check
+      - run: pnpm typecheck
+      - run: pnpm format:check
+      - run: pnpm test:tooling
+      - run: pnpm test --runInBand --watchman=false
+      - run: pnpm test:e2e --runInBand --watchman=false
+      - run: pnpm build
+      - run: node dist/openapi/export.js --check
+      - name: Build container
+        run: docker build -t template-ci .
+      - name: Start core container
+        run: docker run -d --name template-core -p 3000:3000 template-ci
+      - name: Check core container
+        run: pnpm smoke
+      - name: Stop core container
+        run: docker stop --timeout 15 template-core
+      - name: Start optional capabilities
+        run: docker run -d --name template-optional -p 3000:3000 -e FEATURE_MONITORING=true -e FEATURE_RESILIENCE=true template-ci
+      - name: Check optional capabilities
+        run: pnpm smoke
+        env:
+          SMOKE_MONITORING: 'true'
+      - name: Container diagnostics
+        if: failure()
+        run: docker logs template-core
+      - name: Optional capability diagnostics
+        if: failure()
+        run: docker logs template-optional || true

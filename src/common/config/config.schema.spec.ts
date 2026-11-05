@@ -10,7 +10,7 @@ describe('configSchema', () => {
     expect(result.THROTTLE_TTL).toBe(60);
     expect(result.THROTTLE_LIMIT).toBe(100);
     expect(result.APP_NAME).toBe('nestjs-app');
-    expect(result.APP_VERSION).toBe('1.0.0');
+    expect(result.APP_VERSION).toBe('0.0.1');
     expect(result.SHUTDOWN_TIMEOUT).toBe(10000);
   });
 
@@ -54,4 +54,60 @@ describe('configSchema', () => {
       expect(parsed.RESILIENCE_RETRY_MAX_ATTEMPTS).toBe(7);
     });
   });
+});
+
+it('requires explicit origins for credentials and rejects ambiguous feature flags', () => {
+  expect(
+    configSchema.parse({ FEATURE_MONITORING: 'false' }).FEATURE_MONITORING,
+  ).toBe(false);
+  expect(
+    configSchema.parse({ FEATURE_RESILIENCE: 'true' }).FEATURE_RESILIENCE,
+  ).toBe(true);
+  expect(() => configSchema.parse({ FEATURE_MONITORING: 'yes' })).toThrow();
+  expect(() => configSchema.parse({ CORS_CREDENTIALS: 'true' })).toThrow();
+  expect(
+    configSchema.parse({
+      CORS_CREDENTIALS: 'true',
+      CORS_ORIGINS: 'https://example.com',
+    }).CORS_CREDENTIALS,
+  ).toBe(true);
+});
+
+it('rejects invalid listening ports and malformed CORS allowlists', () => {
+  expect(() => configSchema.parse({ PORT: 65536 })).toThrow();
+  for (const CORS_ORIGINS of [
+    '',
+    ',',
+    'https://example.com,',
+    'file:///tmp',
+    'https://example.com/path',
+  ]) {
+    expect(() => configSchema.parse({ CORS_ORIGINS })).toThrow();
+  }
+});
+
+it('supports every built-in Pino level including fatal and silent', () => {
+  for (const LOG_LEVEL of [
+    'trace',
+    'debug',
+    'info',
+    'warn',
+    'error',
+    'fatal',
+    'silent',
+  ]) {
+    expect(configSchema.parse({ LOG_LEVEL }).LOG_LEVEL).toBe(LOG_LEVEL);
+  }
+});
+
+it('bounds the optional readiness drain window by the shutdown deadline', () => {
+  expect(configSchema.parse({}).SHUTDOWN_DRAIN_DELAY_MS).toBe(0);
+  expect(
+    configSchema.parse({ SHUTDOWN_DRAIN_DELAY_MS: '1000' })
+      .SHUTDOWN_DRAIN_DELAY_MS,
+  ).toBe(1000);
+  for (const delay of [-1, 10000])
+    expect(() =>
+      configSchema.parse({ SHUTDOWN_DRAIN_DELAY_MS: delay }),
+    ).toThrow();
 });

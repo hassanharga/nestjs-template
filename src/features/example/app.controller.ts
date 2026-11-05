@@ -6,14 +6,12 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
-import {
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
+import {
+  ApiEnvelope,
+  ApiErrorEnvelope,
+} from '../../common/interceptors/envelope.swagger';
 import { ItemDto, SetItemDto } from './app.dto';
 
 @ApiTags('Items')
@@ -23,11 +21,7 @@ export class AppController {
 
   @Get()
   @ApiOperation({ summary: 'Hello world' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns a greeting string',
-    schema: { type: 'string', example: 'Hello World!' },
-  })
+  @ApiEnvelope(200, { type: 'string', example: 'Hello World!' })
   getHello(): string {
     return this.appService.getHello();
   }
@@ -35,8 +29,8 @@ export class AppController {
   @Post('items')
   @ApiOperation({ summary: 'Create an item' })
   @ApiBody({ type: SetItemDto })
-  @ApiResponse({ status: 201, type: ItemDto, description: 'Item created' })
-  @ApiResponse({ status: 400, description: 'Validation failed' })
+  @ApiEnvelope(201, ItemDto)
+  @ApiErrorEnvelope(400)
   setItem(@Body() body: SetItemDto) {
     return this.appService.setItem(body);
   }
@@ -44,8 +38,9 @@ export class AppController {
   @Get('items/:id')
   @ApiOperation({ summary: 'Get item by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'Item ID', example: 42 })
-  @ApiResponse({ status: 200, type: ItemDto, description: 'Item found' })
-  @ApiResponse({ status: 404, description: 'Item not found' })
+  @ApiEnvelope(200, ItemDto)
+  @ApiErrorEnvelope(400)
+  @ApiErrorEnvelope(404)
   getItem(@Param('id', ParseIntPipe) id: number) {
     return this.appService.getItem(id);
   }

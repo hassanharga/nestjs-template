@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import { INestApplication, VersioningType } from '@nestjs/common';
 
-export default function initializeConfig(
+export function configureApplication(
   app: INestApplication,
   config: ConfigService,
 ) {
@@ -17,7 +17,7 @@ export default function initializeConfig(
   app.enableCors({
     origin:
       corsOrigins === '*' ? '*' : corsOrigins.split(',').map((o) => o.trim()),
-    credentials: true,
+    credentials: config.get<boolean>('CORS_CREDENTIALS', false),
   });
 
   // Global prefix
@@ -28,7 +28,10 @@ export default function initializeConfig(
   // API Versioning
   app.enableVersioning({
     type: VersioningType.URI,
+    defaultVersion: '1',
   });
 
   app.useGlobalPipes(new ZodValidationPipe());
 }
+
+export default configureApplication;

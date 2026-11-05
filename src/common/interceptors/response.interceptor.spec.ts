@@ -1,22 +1,26 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { NotFoundException } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  NotFoundException,
+  StreamableFile,
+} from '@nestjs/common';
 import { err, ok } from 'neverthrow';
-import { of } from 'rxjs';
+import { Readable } from 'node:stream';
+import { firstValueFrom, of } from 'rxjs';
+import { RAW_RESPONSE } from './raw-response.decorator';
 import { ResponseInterceptor } from './response.interceptor';
 
-function buildContext(path: string, statusCode = 200) {
+function buildContext(path: string, statusCode = 200, headersSent = false) {
   return {
     switchToHttp: () => ({
       getRequest: () => ({ path }),
-      getResponse: () => ({ statusCode }),
+      getResponse: () => ({ statusCode, headersSent }),
     }),
-  } as any;
+  } as unknown as ExecutionContext;
 }
 
 function buildHandler(returnValue: unknown) {
-  return { handle: () => of(returnValue) } as any;
+  return { handle: () => of(returnValue) } satisfies CallHandler<unknown>;
 }
 
 describe('ResponseInterceptor', () => {
@@ -36,16 +40,16 @@ describe('ResponseInterceptor', () => {
           data: { id: 1 },
           error: null,
         });
-        expect((result as any).timestamp).toBeDefined();
+        expect((result as { timestamp: string }).timestamp).toBeDefined();
         done();
       });
   });
 
-  it('maps null data to null in the envelope', (done) => {
+  it('leaves 204 responses unwrapped', (done) => {
     interceptor
       .intercept(buildContext('/api/users', 204), buildHandler(null))
       .subscribe((result) => {
-        expect((result as any).data).toBeNull();
+        expect(result).toBeNull();
         done();
       });
   });
@@ -54,7 +58,7 @@ describe('ResponseInterceptor', () => {
     interceptor
       .intercept(buildContext('/api/users', 200), buildHandler(undefined))
       .subscribe((result) => {
-        expect((result as any).data).toBeNull();
+        expect((result as { data: unknown }).data).toBeNull();
         done();
       });
   });
@@ -106,4 +110,56 @@ describe('ResponseInterceptor', () => {
         },
       });
   });
+});
+
+it('passes through download streams', (done) => {
+  const stream = new StreamableFile(Buffer.from('download'));
+  new ResponseInterceptor()
+    .intercept(buildContext('/download'), buildHandler(stream))
+    .subscribe((value) => {
+      expect(value).toBe(stream);
+      done();
+    });
+});
+
+it('supports an explicit opt-out response contract', (done) => {
+  const handler = () => undefined;
+  Reflect.defineMetadata(RAW_RESPONSE, true, handler);
+  const context = Object.assign(buildContext('/raw'), {
+    getHandler: () => handler,
+    getClass: () => class Controller {},
+  });
+  new ResponseInterceptor()
+    .intercept(context, buildHandler('raw'))
+    .subscribe((value) => {
+      expect(value).toBe('raw');
+      done();
+    });
+});
+
+it('passes already-sent, readable and binary responses through unchanged', async () => {
+  const interceptor = new ResponseInterceptor();
+  const sent = { sent: true };
+  expect(
+    await firstValueFrom(
+      interceptor.intercept(
+        buildContext('/raw', 200, true),
+        buildHandler(sent),
+      ),
+    ),
+  ).toBe(sent);
+  for (const value of [
+    new Readable({
+      read() {
+        this.push(null);
+      },
+    }),
+    Buffer.from('csv'),
+  ]) {
+    expect(
+      await firstValueFrom(
+        interceptor.intercept(buildContext('/raw'), buildHandler(value)),
+      ),
+    ).toBe(value);
+  }
 });

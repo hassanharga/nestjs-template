@@ -7,3 +7,5 @@ export type {
   CircuitBreakerOptions,
   BulkheadOptions,
 } from './resilience.types';
+
+export { ResilienceRegistry } from './resilience.registry';

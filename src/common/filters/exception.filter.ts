@@ -8,6 +8,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { safeError, validatedRequestId } from '../logger/logger.options';
+import { isInfrastructurePath } from '../interceptors/raw-response.decorator';
 import { Response } from 'express';
 import { ZodValidationException } from 'nestjs-zod';
 import { AppConfig } from '../config/config.schema';
@@ -40,7 +42,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest<{ path?: string; id?: string | number }>();
+    const requestId = validatedRequestId(request.id);
     const response = ctx.getResponse<Response>();
+    request.id = requestId;
+    if (!response.headersSent) response.setHeader?.('x-request-id', requestId);
 
     let status: number;
     let code: string;
@@ -75,15 +81,37 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       code = 'INTERNAL_SERVER_ERROR';
       message =
         exception instanceof Error
-          ? exception.message
+          ? this.isNotProduction
+            ? exception.message
+            : 'Internal server error'
           : 'Internal server error';
       stack = exception instanceof Error ? exception.stack : undefined;
     }
 
-    this.logger.error(stack);
+    if (status >= 500)
+      this.logger.error({
+        event: 'http.exception',
+        requestId,
+        status,
+        code,
+        error: safeError(exception),
+      });
+    else this.logger.warn({ event: 'http.exception', requestId, status, code });
+
+    if (isInfrastructurePath(request.path)) {
+      response
+        .status(status)
+        .json(
+          exception instanceof HttpException
+            ? exception.getResponse()
+            : { statusCode: status, message },
+        );
+      return;
+    }
 
     response.status(status).json({
       status,
+      requestId,
       success: false,
       data: null,
       error: {

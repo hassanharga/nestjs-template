@@ -1,14 +1,14 @@
+import { ObservedTimeoutPolicy } from './observed-timeout.policy';
 import {
   bulkhead,
   circuitBreaker,
   ConsecutiveBreaker,
   ExponentialBackoff,
-  handleAll,
+  handleWhen,
+  TaskCancelledError,
   IPolicy,
   noop,
   retry,
-  timeout,
-  TimeoutStrategy,
   wrap,
 } from 'cockatiel';
 import {
@@ -20,6 +20,36 @@ import {
   RetryOptions,
   TimeoutOptions,
 } from './resilience.types';
+
+/** Retry only transport failures and explicitly transient HTTP responses. */
+export function isTransientError(error: unknown): boolean {
+  const seen = new Set<object>();
+  let current = error;
+  for (let depth = 0; depth < 8; depth++) {
+    if (current instanceof TaskCancelledError) return true;
+    if (!current || typeof current !== 'object' || seen.has(current))
+      return false;
+    seen.add(current);
+    const value = current as {
+      code?: string;
+      status?: number;
+      statusCode?: number;
+      name?: string;
+      cause?: unknown;
+    };
+    if (value.name === 'AbortError') return false;
+    const status = value.status ?? value.statusCode;
+    if (status !== undefined) return [408, 429, 502, 503, 504].includes(status);
+    if (
+      ['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EAI_AGAIN'].includes(
+        value.code ?? '',
+      )
+    )
+      return true;
+    current = value.cause;
+  }
+  return false;
+}
 
 function resolve<T extends object>(
   value: boolean | T | undefined,
@@ -37,6 +67,13 @@ export function buildPolicy(
 ): IPolicy {
   const name = options.name ?? 'unknown';
   const policies: IPolicy[] = [];
+  if (options.totalTimeout?.ms !== undefined) {
+    policies.push(
+      new ObservedTimeoutPolicy(options.totalTimeout.ms, () =>
+        observer?.recordTimeout(name, 'total'),
+      ),
+    );
+  }
 
   const bulkheadCfg = resolve<BulkheadOptions>(
     options.bulkhead,
@@ -56,7 +93,7 @@ export function buildPolicy(
     defaults.circuitBreaker,
   );
   if (breakerCfg) {
-    const cb = circuitBreaker(handleAll, {
+    const cb = circuitBreaker(handleWhen(isTransientError), {
       halfOpenAfter:
         breakerCfg.halfOpenAfterMs ?? defaults.circuitBreaker.halfOpenAfterMs,
       breaker: new ConsecutiveBreaker(
@@ -69,19 +106,9 @@ export function buildPolicy(
     policies.push(cb);
   }
 
-  const timeoutCfg = resolve<TimeoutOptions>(options.timeout, defaults.timeout);
-  if (timeoutCfg) {
-    const t = timeout(
-      timeoutCfg.ms ?? defaults.timeout.ms,
-      TimeoutStrategy.Aggressive,
-    );
-    t.onTimeout(() => observer?.recordTimeout(name));
-    policies.push(t);
-  }
-
   const retryCfg = resolve<RetryOptions>(options.retry, defaults.retry);
   if (retryCfg) {
-    const r = retry(handleAll, {
+    const r = retry(handleWhen(isTransientError), {
       maxAttempts: retryCfg.maxAttempts ?? defaults.retry.maxAttempts,
       backoff: new ExponentialBackoff({
         initialDelay: retryCfg.initialDelayMs ?? defaults.retry.initialDelayMs,
@@ -90,6 +117,15 @@ export function buildPolicy(
     });
     r.onRetry(() => observer?.recordRetry(name));
     policies.push(r);
+  }
+
+  const timeoutCfg = resolve<TimeoutOptions>(options.timeout, defaults.timeout);
+  if (timeoutCfg) {
+    const t = new ObservedTimeoutPolicy(
+      timeoutCfg.ms ?? defaults.timeout.ms,
+      () => observer?.recordTimeout(name),
+    );
+    policies.push(t);
   }
 
   if (policies.length === 0) return noop;

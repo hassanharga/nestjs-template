@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ResilienceObserver } from './resilience.observer';
 import { BreakerStateValue } from './resilience.constants';
 import { Counter, Gauge } from 'prom-client';
@@ -40,7 +41,10 @@ describe('ResilienceObserver', () => {
 
   it('records a timeout', () => {
     observer.recordTimeout('svc.call');
-    expect(timeouts.inc).toHaveBeenCalledWith({ policy: 'svc.call' });
+    expect(timeouts.inc).toHaveBeenCalledWith({
+      policy: 'svc.call',
+      kind: 'attempt',
+    });
   });
 
   it('records a bulkhead rejection', () => {
@@ -85,4 +89,40 @@ describe('ResilienceObserver', () => {
       BreakerStateValue.Closed,
     );
   });
+});
+
+it('emits stable structured resilience events without interpolated policies', () => {
+  const debug = jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+  const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+  const log = jest.spyOn(Logger.prototype, 'log').mockImplementation();
+  const observer = new ResilienceObserver(
+    undefined!,
+    undefined!,
+    undefined!,
+    undefined!,
+    undefined!,
+  );
+  try {
+    observer.recordRetry('svc.call');
+    observer.recordTimeout('svc.call');
+    observer.recordBulkheadRejection('svc.call');
+    observer.recordBreakerOpen('svc.call');
+    observer.recordBreakerHalfOpen('svc.call');
+    observer.recordBreakerClose('svc.call');
+    expect(debug).toHaveBeenCalledWith({
+      event: 'resilience.retry',
+      policy: 'svc.call',
+    });
+    expect(warn.mock.calls.map(([event]) => event as unknown)).toEqual([
+      { event: 'resilience.timeout', policy: 'svc.call', kind: 'attempt' },
+      { event: 'resilience.bulkhead.rejected', policy: 'svc.call' },
+      { event: 'resilience.circuit.open', policy: 'svc.call' },
+    ]);
+    expect(log.mock.calls.map(([event]) => event as unknown)).toEqual([
+      { event: 'resilience.circuit.half_open', policy: 'svc.call' },
+      { event: 'resilience.circuit.closed', policy: 'svc.call' },
+    ]);
+  } finally {
+    jest.restoreAllMocks();
+  }
 });

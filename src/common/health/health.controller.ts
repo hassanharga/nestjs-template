@@ -1,4 +1,9 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  ServiceUnavailableException,
+  VERSION_NEUTRAL,
+} from '@nestjs/common';
 import {
   DiskHealthIndicator,
   HealthCheck,
@@ -7,9 +12,10 @@ import {
 } from '@nestjs/terminus';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
+import { DrainState } from './drain-state';
 import { AppConfig } from '../config/config.schema';
 
-@Controller('health')
+@Controller({ path: 'health', version: VERSION_NEUTRAL })
 @SkipThrottle()
 export class HealthController {
   constructor(
@@ -17,6 +23,7 @@ export class HealthController {
     private readonly memory: MemoryHealthIndicator,
     private readonly disk: DiskHealthIndicator,
     private readonly config: ConfigService<AppConfig>,
+    private readonly drain: DrainState = new DrainState(),
   ) {}
 
   @Get('live')
@@ -27,6 +34,8 @@ export class HealthController {
   @Get('ready')
   @HealthCheck()
   ready() {
+    if (this.drain.draining)
+      throw new ServiceUnavailableException('Service draining');
     const heapBytes =
       this.config.get('HEALTH_MEMORY_HEAP_MB', { infer: true })! * 1024 * 1024;
     const rssBytes =
@@ -38,54 +47,12 @@ export class HealthController {
 
     return this.health.check([
       () => this.memory.checkHeap('memory_heap', heapBytes),
-      () => this.memory.checkHeap('memory_rss', rssBytes),
+      () => this.memory.checkRSS('memory_rss', rssBytes),
       () =>
         this.disk.checkStorage('disk', {
           path: '/',
           thresholdPercent: diskThreshold,
         }),
-      // async () => {
-      //   try {
-      //     const conn = getConnection();
-      //     if (conn.readyState === 1) {
-      //       return {
-      //         mongodb: {
-      //           status: 'up',
-      //         },
-      //       };
-      //     }
-      //     return {
-      //       mongodb: {
-      //         status: 'down',
-      //         message: 'MongoDB connection not ready',
-      //       },
-      //     };
-      //   } catch (error) {
-      //     return {
-      //       mongodb: {
-      //         status: 'down',
-      //         message: error instanceof Error ? error.message : 'Unknown error',
-      //       },
-      //     };
-      //   }
-      // },
-      // async () => {
-      //   try {
-      //     await this.redis.get('health-check');
-      //     return {
-      //       redis: {
-      //         status: 'up',
-      //       },
-      //     };
-      //   } catch (error) {
-      //     return {
-      //       redis: {
-      //         status: 'down',
-      //         message: error instanceof Error ? error.message : 'Unknown error',
-      //       },
-      //     };
-      //   }
-      // },
     ]);
   }
 }

@@ -8,9 +8,7 @@ const config: Config = {
     '^.+\\.ts$': 'ts-jest',
     '^.+\\.js$': '@swc/jest',
   },
-  transformIgnorePatterns: [
-    'node_modules/(?!(.pnpm/.*cockatiel|cockatiel))',
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(.pnpm/.*cockatiel|cockatiel))'],
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
   testEnvironment: 'node',

@@ -24,7 +24,12 @@ describe('AppController', () => {
     it('returns ok Result when id exists', () => {
       const result = appController.getItem(1);
       expect(result.isOk()).toBe(true);
-      expect(result._unsafeUnwrap()).toEqual({ id: 1, name: 'Example Item' });
+      result.match(
+        (item) => expect(item).toEqual({ id: 1, name: 'Example Item' }),
+        (error) => {
+          throw error;
+        },
+      );
     });
 
     it('returns err Result when id does not exist', () => {

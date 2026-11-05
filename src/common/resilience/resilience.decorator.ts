@@ -14,16 +14,26 @@ export function Resilience(options: ResilienceOptions = {}): MethodDecorator {
     const name = options.name ?? `${className}.${String(propertyKey)}`;
     const original = descriptor.value as (...args: unknown[]) => unknown;
 
-    let policy: IPolicy | undefined;
+    const policies = new WeakMap<object, IPolicy>();
 
-    descriptor.value = function (...args: unknown[]) {
-      policy ??= buildPolicy(
-        { ...options, name },
-        ResilienceRegistry.getDefaults(),
-        ResilienceRegistry.getObserver(),
+    descriptor.value = function (this: object, ...args: unknown[]) {
+      let policy = policies.get(this);
+      if (!policy) {
+        policy = buildPolicy(
+          { ...options, name },
+          new ResilienceRegistry().defaults,
+        );
+        policies.set(this, policy);
+      }
+      const signal =
+        args.at(-1) instanceof AbortSignal
+          ? (args.pop() as AbortSignal)
+          : undefined;
+      return policy.execute(
+        (context): unknown =>
+          original.apply(this, [...args, context]) as unknown,
+        signal,
       );
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return policy.execute(() => original.apply(this, args));
     };
 
     return descriptor;

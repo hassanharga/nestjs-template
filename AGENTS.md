@@ -10,17 +10,17 @@ pnpm run build              # Compile to dist/
 pnpm run test               # Unit tests (src/**/*.spec.ts)
 pnpm run test:e2e           # E2E tests (test/**/*.e2e-spec.ts)
 pnpm run test -- path.spec  # Run a single test file
-pnpm run lint               # ESLint with --fix
+pnpm run lint:check         # Read-only ESLint
 pnpm run format             # Prettier
 ```
 
-Pre-commit hook runs: `pnpm test && pnpm lint && pnpm format`
+Pre-commit runs read-only `pnpm lint:check`, `pnpm typecheck`, and `pnpm format:check`.
 
 Package manager is **pnpm** only — never use npm or yarn.
 
 ## Verification order
 
-`lint -> build -> test` (lint catches issues tsc won't)
+`lint:check -> typecheck -> build -> focused tests` (lint catches issues tsc won't)
 
 ## Stack & conventions
 
@@ -40,9 +40,9 @@ src/
   main.swagger.ts      # Swagger setup with cleanupOpenApiDoc
   main.shutdown.ts     # Graceful shutdown hooks
   app.module.ts        # Root module — registers global filter/interceptor/guard
-  app.controller.ts    # Example controller
-  app.service.ts       # Example service
-  app.dto.ts           # Example DTOs
+  features/example/    # Removable example module
+
+
   common/
     config/            # Zod-validated config schema + module
     decorators/        # @Log() decorator
@@ -60,10 +60,10 @@ New modules should follow the same pattern: module file, controller, service, DT
 - `experimentalDecorators` and `emitDecoratorMetadata` are required — never disable them
 - `reflect-metadata` must be the first import in `main.ts`
 - `@swc/core` is in devDeps but not wired into the build — `ts-jest` is the test transformer
-- API versioning is enabled (URI type) — routes are versioned automatically
-- Global API prefix is commented out in `main.config.ts` — enable before adding real routes
-- Response interceptor wraps all responses — bypass `/health/*` and `/metrics` if adding new infrastructure paths
-- Docker Compose includes monitoring stack (Prometheus, Grafana, Loki, Alloy) — use `pnpm run docker:up`
+- API versioning defaults to URI v1; infrastructure controllers are version-neutral
+- Global prefix is optional; shared HTTP setup is configureApplication in main.config.ts
+- Use @RawResponse() for custom raw endpoints; health/metrics and streams bypass envelopes
+- Core Compose starts only the API. Use `pnpm docker:monitoring:up` for optional infrastructure.
 - `.env.example` exists; `.env` is gitignored
 
 ## Style
@@ -71,3 +71,13 @@ New modules should follow the same pattern: module file, controller, service, DT
 - Prettier: single quotes, trailing commas `"all"`, 2-space indent
 - ESLint: `no-explicit-any` off, `no-floating-promises` warn, `no-console` warn
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`, `ci:`
+
+## Optional capabilities
+
+Monitoring and resilience default off via FEATURE_MONITORING/FEATURE_RESILIENCE. Read docs/capabilities.md for imports/removal. Use Node 26.13.0, pnpm 12.16.1. Do not install dependencies without authorization. Full-suite execution requires explicit authorization; prefer focused paths.
+
+## Generated contract
+
+Business modules belong in API_MODULES in src/features/api.modules.ts. This list
+also defines offline Swagger export scope. Read docs/api-generation.md; run
+pnpm api:generate after API changes and pnpm api:check for read-only drift checks.

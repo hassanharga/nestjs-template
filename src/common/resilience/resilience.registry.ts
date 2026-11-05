@@ -1,3 +1,6 @@
+import { IPolicy } from 'cockatiel';
+import { buildPolicy } from './resilience.factory';
+import { ResilienceOptions } from './resilience.types';
 import { ResilienceDefaults, ResilienceObserverLike } from './resilience.types';
 
 export const FALLBACK_DEFAULTS: ResilienceDefaults = {
@@ -8,27 +11,12 @@ export const FALLBACK_DEFAULTS: ResilienceDefaults = {
 };
 
 export class ResilienceRegistry {
-  private static defaults: ResilienceDefaults | undefined;
-  private static observer: ResilienceObserverLike | undefined;
+  constructor(
+    readonly defaults: ResilienceDefaults = FALLBACK_DEFAULTS,
+    readonly observer?: ResilienceObserverLike,
+  ) {}
 
-  static configure(
-    defaults: ResilienceDefaults,
-    observer: ResilienceObserverLike,
-  ): void {
-    this.defaults = defaults;
-    this.observer = observer;
-  }
-
-  static getDefaults(): ResilienceDefaults {
-    return this.defaults ?? FALLBACK_DEFAULTS;
-  }
-
-  static getObserver(): ResilienceObserverLike | undefined {
-    return this.observer;
-  }
-
-  static reset(): void {
-    this.defaults = undefined;
-    this.observer = undefined;
+  create(options: ResilienceOptions): IPolicy {
+    return buildPolicy(options, this.defaults, this.observer);
   }
 }

@@ -1,3 +1,3 @@
-pnpm test
-pnpm lint
-pnpm format
+pnpm lint:check
+pnpm typecheck
+pnpm format:check

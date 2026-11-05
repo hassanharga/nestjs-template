@@ -31,7 +31,8 @@ describe('buildPolicy', () => {
     let calls = 0;
     const result = await policy.execute(() => {
       calls += 1;
-      if (calls < 2) throw new Error('boom');
+      if (calls < 2)
+        throw Object.assign(new Error('boom'), { code: 'ECONNRESET' });
       return 'ok';
     });
     expect(result).toBe('ok');
@@ -61,7 +62,10 @@ describe('buildPolicy', () => {
       defaults,
       observer,
     );
-    const fail = () => policy.execute(() => Promise.reject(new Error('x')));
+    const fail = () =>
+      policy.execute(() =>
+        Promise.reject(Object.assign(new Error('x'), { code: 'ECONNRESET' })),
+      );
     await expect(fail()).rejects.toBeDefined();
     await expect(fail()).rejects.toBeDefined();
     // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -84,4 +88,51 @@ describe('buildPolicy', () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(observer.recordBulkheadRejection).toHaveBeenCalledWith('p');
   });
+});
+
+it('does not retry permanent failures', async () => {
+  const policy = buildPolicy({ retry: true }, defaults);
+  const call = jest.fn(() => {
+    throw new TypeError('programming error');
+  });
+  await expect(policy.execute(call)).rejects.toBeInstanceOf(TypeError);
+  expect(call).toHaveBeenCalledTimes(1);
+});
+
+it('gives each retry its own timeout and forwards cancellation', async () => {
+  const policy = buildPolicy(
+    { retry: { maxAttempts: 1, initialDelayMs: 1 }, timeout: { ms: 10 } },
+    defaults,
+  );
+  const signals: AbortSignal[] = [];
+  await expect(
+    policy.execute(({ signal }) => {
+      signals.push(signal);
+      return new Promise(() => undefined);
+    }),
+  ).rejects.toBeDefined();
+  expect(signals).toHaveLength(2);
+  expect(signals.every((signal) => signal.aborted)).toBe(true);
+});
+
+it('propagates caller cancellation without retrying the cancelled call', async () => {
+  const aborter = new AbortController();
+  const policy = buildPolicy({ retry: true, timeout: { ms: 1000 } }, defaults);
+  let supplied: AbortSignal | undefined;
+  const call = jest.fn(({ signal }: { signal: AbortSignal }) => {
+    supplied = signal;
+    return new Promise((_resolve, reject) =>
+      signal.addEventListener(
+        'abort',
+        () =>
+          reject(Object.assign(new Error('cancelled'), { name: 'AbortError' })),
+        { once: true },
+      ),
+    );
+  });
+  const result = policy.execute(call, aborter.signal);
+  aborter.abort();
+  await expect(result).rejects.toBeDefined();
+  expect(supplied?.aborted).toBe(true);
+  expect(call).toHaveBeenCalledTimes(1);
 });
