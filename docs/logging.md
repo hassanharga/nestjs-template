@@ -46,6 +46,10 @@ Shutdown emits start/completion/failure/timeout events with a shutdownId.
 Each enabled MonitoringModule owns its own Prometheus registry and collectors.
 Closing an application clears its registry. Injected-registry resilience policies log independently; when
 monitoring is enabled, its metrics are registered in that application's registry.
+The timeout metric is `resilience_timeouts_total{policy, kind}` with
+`kind=attempt` or `kind=total`. This adds `kind` to the earlier policy-only schema;
+review dashboards and alerts to decide whether to filter by kind or aggregate
+across it. Caller cancellation is excluded from both timeout categories.
 The four monitoring/resilience combinations are covered by module integration
 tests, including multiple application instances in the same process.
 
@@ -56,7 +60,7 @@ resilience.retry (debug), resilience.timeout, resilience.bulkhead.rejected, and
 resilience.circuit.open (warn), plus resilience.circuit.half_open and
 resilience.circuit.closed (info). Policy names should be static configuration
 identifiers; never derive them from credentials, user input, or full URLs.
-Metric labels and behavior are unchanged.
+These event fields describe log records; the timeout metric labels are documented above.
 
 Method events omit arguments, results, and raw exception messages by default.
 Opted-in arguments/results remain sanitized, serialized, and bounded in their

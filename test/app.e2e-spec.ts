@@ -147,7 +147,14 @@ describe('AppController (e2e)', () => {
       return process;
     }) as typeof process.on);
     try {
-      shutdown(app, app.get(ConfigService));
+      // HTTP lifecycle assertions are independent of deployment drain settings.
+      shutdown(
+        app,
+        new ConfigService({
+          SHUTDOWN_DRAIN_DELAY_MS: 0,
+          SHUTDOWN_TIMEOUT: 10000,
+        }),
+      );
     } finally {
       on.mockRestore();
     }
@@ -164,13 +171,13 @@ describe('AppController (e2e)', () => {
       await started;
       signals.SIGTERM();
       expect(app.get(DrainState).draining).toBe(true);
-      expect(close).toHaveBeenCalledTimes(1);
       release?.();
       const response = await pending;
       expect(response.status).toBe(200);
       expect(response.body.data).toBe('completed');
       if (!closing) throw new Error('Shutdown did not begin');
       await closing;
+      expect(close).toHaveBeenCalledTimes(1);
       closed = true;
     } finally {
       release?.();
