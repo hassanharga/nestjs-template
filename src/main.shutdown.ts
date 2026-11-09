@@ -2,6 +2,7 @@ import { INestApplication, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { DrainState } from './common/health/drain-state';
+import { stopTelemetry } from './common/telemetry/bridge';
 import { safeError } from './common/logger/logger.options';
 
 /** One owner for signal handling; do not also enable Nest signal hooks. */
@@ -30,11 +31,12 @@ export const shutdown = (app: INestApplication, config: ConfigService) => {
     const beginClose = () => {
       void app
         .close()
-        .then(() => {
-          clearTimeout(timer);
+        .then(async () => {
           process.removeListener('SIGTERM', onTerm);
           process.removeListener('SIGINT', onInt);
           logger.log({ event: 'shutdown.completed', shutdownId });
+          await stopTelemetry();
+          clearTimeout(timer);
         })
         .catch((error: unknown) => {
           logger.error({

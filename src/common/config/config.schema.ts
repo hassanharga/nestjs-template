@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import {
+  telemetrySchema,
+  validateTelemetryEndpoint,
+} from '../telemetry/options';
 
 const booleanEnv = z.preprocess(
   (value) => (value === 'true' ? true : value === 'false' ? false : value),
@@ -7,6 +11,7 @@ const booleanEnv = z.preprocess(
 
 export const configSchema = z
   .object({
+    ...telemetrySchema('nestjs-api').shape,
     NODE_ENV: z
       .enum(['development', 'staging', 'production', 'test'])
       .default('development'),
@@ -88,6 +93,7 @@ export const configSchema = z
       .default(0),
   })
   .superRefine((config, ctx) => {
+    validateTelemetryEndpoint(config, ctx);
     if (config.SHUTDOWN_DRAIN_DELAY_MS >= config.SHUTDOWN_TIMEOUT) {
       ctx.addIssue({
         code: 'custom',

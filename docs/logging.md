@@ -74,3 +74,5 @@ it does not emit these events or metrics. Use the injected registry when configu
 defaults and observability are required. Timeout records include kind=attempt or
 kind=total; caller cancellation is excluded. Bootstrap fallback records include
 safe error type/source frames without environment values or raw messages.
+
+See [observability](observability.md) for optional tracing, linked log export and the local Grafana setup.

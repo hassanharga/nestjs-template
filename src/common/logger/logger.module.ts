@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { telemetryLogStream } from '../telemetry/log-stream';
 import { createHttpLoggerOptions } from './logger.options';
 
 @Module({
@@ -9,7 +10,9 @@ import { createHttpLoggerOptions } from './logger.options';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        pinoHttp: createHttpLoggerOptions(config),
+        pinoHttp: config.get<boolean>('FEATURE_TELEMETRY', false)
+          ? [createHttpLoggerOptions(config), telemetryLogStream()]
+          : createHttpLoggerOptions(config),
       }),
     }),
   ],

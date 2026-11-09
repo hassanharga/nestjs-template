@@ -1,63 +1,32 @@
-# Optional local observability stack. Use with docker-compose.yml.
+# Optional development-only observability. Production uses an external collector.
 services:
   api:
     environment:
       FEATURE_MONITORING: 'true'
-
-  prometheus:
-    image: prom/prometheus:v2.53.0
-    ports:
-      - '127.0.0.1:9090:9090'
-    volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    networks:
-      - app-network
+      FEATURE_TELEMETRY: 'true'
+      OTEL_SERVICE_NAME: nestjs-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
     depends_on:
-      api:
+      lgtm:
         condition: service_healthy
-    restart: unless-stopped
 
-  grafana:
-    image: grafana/grafana:11.5.0
+  lgtm:
+    image: grafana/otel-lgtm:0.40.0@sha256:72e05804790e6e0d8c0b70a6d5ff1f721ef7b203463374631e99aa3429bd0cf6
     ports:
-      - '127.0.0.1:3001:3000'
-    volumes:
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
-      - grafana-data:/var/lib/grafana
+      - '127.0.0.1:${GRAFANA_PORT:-3001}:3000'
+      - '127.0.0.1:${OTLP_PORT:-4318}:4318'
     environment:
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env before starting monitoring}
-    networks:
-      - app-network
-    depends_on:
-      - prometheus
-    restart: unless-stopped
-
-  loki:
-    image: grafana/loki:3.4.2
-    ports:
-      - '127.0.0.1:3100:3100'
+      API_METRICS_TARGET: api:3000
+      OTELCOL_EXTRA_ARGS: --config=file:/etc/otelcol/template-metrics.yaml
     volumes:
-      - ./docker/loki/loki.yml:/etc/loki/local-config.yaml:ro
-      - loki-data:/loki
+      - telemetry-data:/data
+      - ./docker/telemetry/collector.yaml:/etc/otelcol/template-metrics.yaml:ro
+      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
     networks:
       - app-network
-    restart: unless-stopped
-
-  alloy:
-    image: grafana/alloy:v1.16.1
-    volumes:
-      - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    command:
-      - run
-      - --storage.path=/var/lib/alloy/data
-      - /etc/alloy/config.alloy
-    networks:
-      - app-network
-    depends_on:
-      - loki
-    restart: unless-stopped
+    stop_grace_period: 20s
 
 volumes:
-  grafana-data:
-  loki-data:
+  telemetry-data:

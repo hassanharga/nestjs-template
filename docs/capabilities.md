@@ -24,9 +24,9 @@ requests use synthetic status 499.
 
 For local infrastructure, set GRAFANA_ADMIN_PASSWORD in .env and run
 `pnpm docker:monitoring:up`. The additional Compose file enables application
-metrics and adds Prometheus, Grafana, Loki, and Alloy. Ports bind to loopback.
-Alloy needs Docker socket access for log discovery. Choose production monitoring
-and access policies in the consuming project.
+metrics and adds one optional Grafana LGTM development container for metrics,
+logs and traces. Ports bind to loopback; no Docker socket is mounted. Choose
+production monitoring and access policies in the consuming project.
 
 Physical removal: remove the conditional monitoring imports from AppModule and
 ResilienceModule, src/common/monitoring and its tests/settings, and the Compose
@@ -107,3 +107,5 @@ Configure load balancers/Kubernetes readiness checks against /health/ready;
 liveness and does not implement load-balancer deregistration. The right dwell
 is deployment-specific; the template does not claim zero dropped requests in
 an untested deployment.
+
+See [observability](observability.md) for optional tracing, linked log export and the local Grafana setup.

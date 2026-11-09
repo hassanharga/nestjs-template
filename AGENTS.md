@@ -144,3 +144,5 @@ Register business modules in src/features/api.modules.ts (API_MODULES), shared
 by AppModule and the offline exporter. Run pnpm api:generate after API changes
 and pnpm api:check to detect drift. See docs/api-generation.md. Production
 builds disable incremental emission so repeated clean builds remain complete.
+
+Optional server tracing and linked log export: see [observability](docs/observability.md).

@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { Options } from 'pino-http';
+import { traceFields } from '../telemetry/bridge';
 
 export function validatedRequestId(value: unknown): string {
   return typeof value === 'string' && /^[A-Za-z0-9._:-]{1,128}$/.test(value)
@@ -30,8 +31,11 @@ export function safeError(error: unknown): Record<string, unknown> {
 export function createHttpLoggerOptions(config: ConfigService): Options {
   return {
     level: config.get<string>('LOG_LEVEL', 'info'),
+    mixin: traceFields,
+    customProps: traceFields,
     transport:
-      config.get<string>('NODE_ENV') === 'development'
+      config.get<string>('NODE_ENV') === 'development' &&
+      !config.get<boolean>('FEATURE_TELEMETRY', false)
         ? {
             target: 'pino-pretty',
             options: { colorize: true, singleLine: true },

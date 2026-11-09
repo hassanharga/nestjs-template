@@ -110,8 +110,7 @@ it('holds the listener open during the configured readiness drain window', async
     expect(close).not.toHaveBeenCalled();
     jest.advanceTimersByTime(99);
     expect(close).not.toHaveBeenCalled();
-    jest.advanceTimersByTime(1);
-    await Promise.resolve();
+    await jest.advanceTimersByTimeAsync(1);
     expect(close).toHaveBeenCalledTimes(1);
     expect(remove).toHaveBeenCalledWith('SIGTERM', listeners.SIGTERM);
     expect(remove).toHaveBeenCalledWith('SIGINT', listeners.SIGINT);

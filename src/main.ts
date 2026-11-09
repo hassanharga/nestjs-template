@@ -8,6 +8,7 @@ import initializeConfig from './main.config';
 import setupSwagger from './main.swagger';
 import { shutdown } from './main.shutdown';
 import { Logger } from '@nestjs/common';
+import { telemetryHttp } from './common/telemetry/http.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -22,6 +23,24 @@ async function bootstrap() {
 
   const logger = new Logger(appName);
 
+  if (config.get<boolean>('FEATURE_TELEMETRY', false)) {
+    const { startTelemetry } = await import('./common/telemetry/runtime');
+    startTelemetry(
+      {
+        FEATURE_TELEMETRY: true,
+        OTEL_SERVICE_NAME: config.get<string>('OTEL_SERVICE_NAME'),
+        OTEL_EXPORTER_OTLP_ENDPOINT: config.get<string>(
+          'OTEL_EXPORTER_OTLP_ENDPOINT',
+        ),
+        OTEL_EXPORTER_OTLP_HEADERS: config.get<string>(
+          'OTEL_EXPORTER_OTLP_HEADERS',
+        ),
+        OTEL_TRACES_SAMPLER_ARG: config.get<number>('OTEL_TRACES_SAMPLER_ARG'),
+      },
+      'nestjs-api',
+    );
+  }
+  app.use(telemetryHttp);
   initializeConfig(app, config);
 
   if (nodeEnv !== 'production') {

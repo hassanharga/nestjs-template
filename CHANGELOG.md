@@ -16,3 +16,9 @@
 - Handle wrapped fetch failures, isolate timeout observation, and distinguish attempt/total budgets.
 - Add configurable readiness dwell, safe bootstrap diagnostics, and missing boundary regression cases.
 - Verify initialization against shipped settings and avoid duplicate PR workflows.
+
+## Optional observability
+
+- Add opt-in server traces, safe linked OTLP logs and request propagation.
+- Simplify local monitoring to a pinned Grafana LGTM development container.
+- Preserve default terminal logging and collector-free startup.

@@ -94,3 +94,5 @@ It changes package.json name and the application identity in .env.example. It
 does not rename the directory, install packages, initialize Git, change remotes,
 or modify existing .env/.env.local files. Run it before creating your local env
 file. If that file already exists, update its application name manually.
+
+Optional server tracing and linked log export: see [observability](docs/observability.md).

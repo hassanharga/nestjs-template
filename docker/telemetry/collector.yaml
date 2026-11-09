@@ -1,0 +1,13 @@
+receivers:
+  prometheus/template:
+    config:
+      scrape_configs:
+        - job_name: nestjs-api
+          scrape_interval: 15s
+          metrics_path: /metrics
+          static_configs:
+            - targets: ['${env:API_METRICS_TARGET}']
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp, prometheus/collector, prometheus/template]
